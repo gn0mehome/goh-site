@@ -41,7 +41,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/competitions" className="text-parchment hover:text-gold-light transition-colors">
-                  Competitions
+                  WOM Competitions
                 </Link>
               </li>
               <li>

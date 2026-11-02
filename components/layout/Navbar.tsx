@@ -32,10 +32,10 @@ const NAV_ITEMS: NavItem[] = [
     type: "dropdown",
     label: "Events",
     items: [
-      { href: "/activities", label: "Activities", sectionKey: "activities" },
       { href: "/events", label: "Calendar", sectionKey: "events" },
+      { href: "/contests", label: "Contests", sectionKey: "activities" },
       { href: "/bingo", label: "Bingo", sectionKey: "bingo" },
-      { href: "/competitions", label: "Competitions", sectionKey: "competitions" },
+      { href: "/competitions", label: "WOM Competitions", sectionKey: "competitions" },
       { href: "/hiscores", label: "Hiscores", sectionKey: "hiscores" },
       { href: "/leaderboard", label: "Attendance Leaderboard", sectionKey: "leaderboard" },
     ],

@@ -97,7 +97,7 @@ export function QuestBasicsStep({ data, onSaved, onNext }: { data: AdminQuestEve
         <Field label="Name">
           <input value={form.name} maxLength={100} onChange={(e) => set("name", e.target.value)} className={inputClass} />
         </Field>
-        <Field label="Short description" hint="Shown on the Activities page and at the top of the event.">
+        <Field label="Short description" hint="Shown on the Contests page and at the top of the event.">
           <textarea value={form.description} rows={2} maxLength={2000} onChange={(e) => set("description", e.target.value)} className={inputClass} placeholder="Two weeks to knock out as many quests as you can. Harder quests score more." />
         </Field>
         <Field label="Rules" hint="Shown on the event's Rules tab. Line breaks are kept.">

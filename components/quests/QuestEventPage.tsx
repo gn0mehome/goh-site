@@ -128,8 +128,8 @@ export function QuestEventPage({ eventId }: { eventId: string }) {
     return error ? (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center space-y-3">
         <p className="text-bark-brown">{error}</p>
-        <Link href="/activities" className="text-gnome-green hover:underline text-sm">
-          ← Back to Activities
+        <Link href="/contests" className="text-gnome-green hover:underline text-sm">
+          ← Back to Contests
         </Link>
       </div>
     ) : (
@@ -228,8 +228,8 @@ export function QuestEventPage({ eventId }: { eventId: string }) {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <Link href="/activities" className="text-sm text-gnome-green hover:underline">
-        ← Activities
+      <Link href="/contests" className="text-sm text-gnome-green hover:underline">
+        ← Contests
       </Link>
 
       {event.banner_url && (

@@ -4,10 +4,11 @@ import { formatNumber } from "@/lib/utils";
 import { checkSectionAccess } from "@/lib/section-gate";
 import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Competitions",
-  description: "View active and past Gn0me Home clan competitions from Wise Old Man.",
+  title: "WOM Competitions",
+  description: "Skill & Boss of the Week and other Gn0me Home competitions tracked on Wise Old Man: live, upcoming and past.",
 };
 
 export const dynamic = "force-dynamic"; // gated per-viewer now, can't be statically cached
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic"; // gated per-viewer now, can't be static
 export default async function CompetitionsPage() {
   if (!(await checkSectionAccess("competitions"))) return <SectionUnavailable />;
 
-  const competitions = await getGroupCompetitions();
+  const [competitions, showContests] = await Promise.all([getGroupCompetitions(), checkSectionAccess("activities")]);
 
   const now = new Date();
   const active = competitions.filter(
@@ -38,10 +39,10 @@ export default async function CompetitionsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
       <h1 className="font-display text-4xl text-gnome-green mb-2">
-        Competitions
+        WOM Competitions
       </h1>
       <p className="text-bark-brown-light mb-10">
-        Clan competitions tracked through{" "}
+        Skill &amp; Boss of the Week and other clan competitions, tracked automatically on{" "}
         <a
           href="https://wiseoldman.net/groups/24582/competitions"
           target="_blank"
@@ -50,7 +51,17 @@ export default async function CompetitionsPage() {
         >
           Wise Old Man
         </a>
-        .
+        . Your gains count as soon as WOM updates you.
+        {showContests && (
+          <>
+            {" "}
+            Looking for bingos, quest races or art contests? They&apos;re on{" "}
+            <Link href="/contests" className="text-gnome-green hover:text-gnome-green-light underline">
+              Contests
+            </Link>
+            .
+          </>
+        )}
       </p>
 
       {/* Active Competitions */}

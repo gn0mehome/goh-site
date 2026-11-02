@@ -103,8 +103,8 @@ export function ArtContestPage({ contestId }: { contestId: string }) {
     return error ? (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center space-y-3">
         <p className="text-bark-brown">{error}</p>
-        <Link href="/activities" className="text-gnome-green hover:underline text-sm">
-          ← Back to Activities
+        <Link href="/contests" className="text-gnome-green hover:underline text-sm">
+          ← Back to Contests
         </Link>
       </div>
     ) : (
@@ -171,8 +171,8 @@ export function ArtContestPage({ contestId }: { contestId: string }) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      <Link href="/activities" className="text-sm text-gnome-green hover:underline">
-        ← Activities
+      <Link href="/contests" className="text-sm text-gnome-green hover:underline">
+        ← Contests
       </Link>
       {contest.banner_url && (
         // eslint-disable-next-line @next/next/no-img-element

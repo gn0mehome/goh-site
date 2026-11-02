@@ -295,7 +295,7 @@ export function QuestPlayersStep({ data, onSaved, onNext }: { data: AdminQuestEv
             <h2 className="font-display text-xl text-bark-brown">Sign-ups</h2>
             <p className="text-sm text-iron-grey">
               {event.status === "signups"
-                ? `Open: members can see this event on the Activities page and join it themselves. ${data.participants.length} in so far.`
+                ? `Open: members can see this event on the Contests page and join it themselves. ${data.participants.length} in so far.`
                 : event.status === "draft"
                   ? "Open sign-ups to list the event and let members join themselves. You can also add people here."
                   : "Members can still join while it's live. Their starting point is taken when they join."}

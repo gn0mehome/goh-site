@@ -15,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/tools",
     "/members",
     "/competitions",
+    "/contests",
     "/newsletter",
     "/about",
   ];
