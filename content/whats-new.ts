@@ -34,6 +34,18 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── November 2, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-11-02-discord-widget",
+    date: "2026-11-02",
+    kind: "new",
+    audience: "everyone",
+    title: "See who's online in Discord from the homepage",
+    summary:
+      "The top of the homepage now shows our Discord server live: who's online, who's in voice, and a Join button. On a computer it sits next to the welcome; on a phone, tap See who's online in Discord under the buttons to open it. The Join Our Discord button is now gold so it's easier to spot.",
+    tryIt: ["Open the homepage and look to the right of the welcome (or tap See who's online in Discord on a phone)."],
+    links: [{ label: "Homepage", href: "/" }],
+  },
   // ── October 31, 2026 ──────────────────────────────────────────────
   {
     id: "2026-10-31-contests-and-wom-competitions",
