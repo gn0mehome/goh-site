@@ -34,6 +34,18 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── November 3, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-11-03-discord-widget-hidden",
+    date: "2026-11-03",
+    kind: "improved",
+    audience: "everyone",
+    title: "Discord widget hidden from the homepage for now",
+    summary:
+      "The live Discord panel at the top of the homepage is switched off for now, and the welcome is back in the middle of the banner. The gold Join Our Discord button is still there.",
+    tryIt: ["Open the homepage: the banner shows the welcome and the Join Our Discord and View Members buttons."],
+    links: [{ label: "Homepage", href: "/" }],
+  },
   // ── November 2, 2026 ──────────────────────────────────────────────
   {
     id: "2026-11-02-discord-widget",
