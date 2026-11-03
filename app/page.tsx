@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE, CLAN_TIMEZONE } from "@/lib/constants";
+import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE, CLAN_TIMEZONE, SHOW_DISCORD_WIDGET } from "@/lib/constants";
 import { getGroupDetails, getGroupAchievements, getGroupCompetitions, getCompetitionLeaders, type CompetitionLeader } from "@/lib/wom";
 import { AchievementsTicker } from "@/components/home/AchievementsTicker";
 import { formatNumber } from "@/lib/utils";
@@ -130,24 +130,25 @@ export default async function HomePage() {
   }).slice(0, 15);
 
   const recentAchievementCount = diverseAchievements.length;
+  const widget = SHOW_DISCORD_WIDGET;
 
   return (
     <div>
       {/* Hero Section */}
       <section className="relative bg-gnome-green overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M20%200L40%2020L20%2040L0%2020Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30" />
-        {/* Wide screens: welcome on the left, the live Discord widget on the right.
-            Smaller screens keep the centred hero, with the widget behind a toggle. */}
-        <div className="relative max-w-7xl mx-auto px-4 py-24 lg:py-14 grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div className="text-center lg:text-left">
+        {/* With SHOW_DISCORD_WIDGET on: welcome on the left and the live Discord
+            widget on the right on wide screens, behind a toggle on smaller ones. */}
+        <div className={`relative max-w-7xl mx-auto px-4 py-24 grid gap-10 ${widget ? "lg:py-14 lg:grid-cols-[1fr_auto] lg:items-center" : ""}`}>
+          <div className={widget ? "text-center lg:text-left" : "text-center"}>
             <h1 className="font-display text-6xl md:text-7xl text-gold-light mb-4 text-shadow">
               {CLAN_NAME}
             </h1>
-            <p className="text-xl md:text-2xl text-parchment mb-8 max-w-2xl mx-auto lg:mx-0">
+            <p className={`text-xl md:text-2xl text-parchment mb-8 max-w-2xl mx-auto ${widget ? "lg:mx-0" : ""}`}>
               An Old School RuneScape community built on friendship, adventure,
               and the occasional gnome pun.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <div className={`flex flex-col sm:flex-row gap-4 justify-center ${widget ? "lg:justify-start" : ""}`}>
               <a
                 href={DISCORD_INVITE}
                 target="_blank"
@@ -165,7 +166,8 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
-            <details className="lg:hidden mt-6 group">
+            {widget && (
+              <details className="lg:hidden mt-6 group">
               <summary className="inline-flex items-center gap-2 cursor-pointer list-none text-parchment/90 hover:text-gold-light text-sm font-semibold">
                 <span className="w-2 h-2 rounded-full bg-[#23a55a]" aria-hidden />
                 See who&apos;s online in Discord
@@ -174,15 +176,18 @@ export default async function HomePage() {
                 </span>
               </summary>
               <DiscordWidget className="mt-4 mx-auto w-fit" height={420} />
-            </details>
+              </details>
+            )}
           </div>
-          <div className="hidden lg:block">
+          {widget && (
+            <div className="hidden lg:block">
             <p className="flex items-center gap-2 text-sm font-semibold text-parchment/90 mb-2">
               <span className="w-2 h-2 rounded-full bg-[#23a55a]" aria-hidden />
               Live on our Discord
             </p>
-            <DiscordWidget />
-          </div>
+              <DiscordWidget />
+            </div>
+          )}
         </div>
       </section>
 

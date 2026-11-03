@@ -10,6 +10,8 @@ export const CLAN_TIMEZONE = "America/New_York";
 export const DISCORD_INVITE = "https://discord.gg/F392pAMCvA";
 // Server ID for Discord's live widget (Server Settings > Widget must be on).
 export const DISCORD_SERVER_ID = "1486886790425084084";
+// The homepage widget is switched off for now; set to true to bring it back.
+export const SHOW_DISCORD_WIDGET = false;
 
 // The clan's ranks, lowest to highest. Gold Key and Silver Key are the
 // in-game Owner and Deputy Owner ranks (their key icons), as Wise Old Man
