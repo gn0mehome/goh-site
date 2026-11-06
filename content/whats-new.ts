@@ -34,6 +34,22 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── November 6, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-11-06-sotw-botw-insights",
+    date: "2026-11-06",
+    kind: "new",
+    audience: "admin",
+    title: "SOTW & BotW Insights dashboard",
+    summary:
+      "A new admin page shows how the clan takes part in Skill and Boss of the Week. It has the number of competitions, how many different people competed, the average per week, and what share of entrants actually gained. Charts show competitors per week and how many were first-timers versus returning. A table ranks the most frequent competitors with their wins and top-3 finishes, a list shows regulars who've skipped the latest few, and every competition is listed with its top 3. Filter by SOTW, BotW or both, and by date range. Results are copied from Wise Old Man automatically when you open the page.",
+    tryIt: [
+      "Go to Admin › Competitions › SOTW/BotW Insights.",
+      "Wait a moment while it catches up with Wise Old Man (the first visit loads every past competition).",
+      "Switch between Skill of the Week, Boss of the Week and Both, or change the date range, and click a column in Most frequent competitors to sort it.",
+    ],
+    links: [{ label: "SOTW/BotW Insights", href: "/admin/competition-insights" }],
+  },
   // ── November 3, 2026 ──────────────────────────────────────────────
   {
     id: "2026-11-03-discord-widget-hidden",

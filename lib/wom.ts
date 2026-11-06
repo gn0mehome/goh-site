@@ -171,6 +171,26 @@ export async function getGroupCompetitions() {
   }
 }
 
+/**
+ * Every competition in the clan's group, all pages. Unlike
+ * getGroupCompetitions this throws on failure, so a sync can tell "WOM is
+ * down" from "there are none".
+ */
+export async function getAllGroupCompetitions() {
+  const all: Awaited<ReturnType<typeof womClient.groups.getGroupCompetitions>> = [];
+  for (let offset = 0; offset < 5000; offset += 50) {
+    const page = await womClient.groups.getGroupCompetitions(WOM_GROUP_ID, { limit: 50, offset });
+    all.push(...page);
+    if (page.length < 50) break;
+  }
+  return all;
+}
+
+/** One competition with every participation (throws on failure). */
+export async function getCompetitionDetailsOrThrow(id: number) {
+  return womClient.competitions.getCompetitionDetails(id);
+}
+
 export interface CompetitionLeader {
   displayName: string;
   gained: number;
