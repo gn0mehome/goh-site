@@ -34,6 +34,25 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── November 7, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-11-07-weekly-competition-builder",
+    date: "2026-11-07",
+    kind: "improved",
+    audience: "staff",
+    title: "WOM Competitions: quick setup for Skill and Boss of the Week",
+    summary:
+      "The competition builder now starts by asking what kind of competition it is. Pick Skill of the Week or Boss of the Week and it fills in the rest: the start defaults to next Sunday at 8 PM Eastern, the end to a week later, and the title follows the usual format (for example Boss of the Week | 11/8 | Perilous Moons), updating as you change the boss or date. Boss of the Week lists the bosses from the Boss Difficulty settings, grouped into Hard and Easy, and says which kind is due next after the last boss week. On the Boss Difficulty page you can give a boss the name the clan uses for it in titles. You can still type your own title, or pick Custom for anything else.",
+    tryIt: [
+      "Go to Admin › Competitions › WOM Competitions and pick Boss of the Week.",
+      "Choose a boss from the Hard or Easy list and check the title and dates it filled in.",
+      "To change how a boss is named in titles, go to Settings › Boss Difficulty and press rename for titles next to it.",
+    ],
+    links: [
+      { label: "WOM Competitions", href: "/admin/wom-competitions" },
+      { label: "Boss Difficulty", href: "/admin/boss-difficulty" },
+    ],
+  },
   // ── November 6, 2026 ──────────────────────────────────────────────
   {
     id: "2026-11-06-dashboard-exports",
