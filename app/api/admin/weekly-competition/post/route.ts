@@ -4,6 +4,7 @@ import { checkPermission } from "@/lib/check-permission";
 import { getAlertChannel } from "@/lib/alert-channels";
 import { createForumPost, createPoll, isDiscordSnowflake, postToChannel } from "@/lib/discord";
 import { splitDiscordMessage } from "@/lib/weekly-announcement-templates";
+import { allowedMetrics } from "@/lib/weekly-poll";
 
 export const maxDuration = 60;
 
@@ -39,7 +40,10 @@ async function postChunks(chunks: string[], channelId: string) {
 //   1. results  -> reply in last week's forum thread
 //   2. forum    -> new thread for this week (split across messages if long)
 //   3. raffle   -> announcements channel
-//   4. poll     -> the voting thread (next-next week's SOTW/BotW vote)
+//   4. poll     -> the voting thread (next-next week's SOTW/BotW vote). When
+//                  it comes with kind, weekStart and the skill/boss(es) behind
+//                  each answer (choices), it's watched until it closes and the
+//                  winner is set up as a competition (lib/weekly-poll.ts).
 // Each step is optional (omit it to skip, e.g. on a retry after a partial
 // failure). Stops at the first failure and reports which steps went out, so
 // the page can retry just the rest. As soon as the new forum thread exists,
@@ -188,6 +192,33 @@ export async function POST(request: NextRequest) {
     });
     // The poll is live on Discord either way -- only its admin Polls page entry is missing.
     if (pollSaveError) console.error("Weekly turnover: poll posted but not saved to polls table:", pollSaveError);
+
+    // Watch it: remember which skill/boss(es) each answer stands for.
+    const kind = body.poll.kind === "sotw" || body.poll.kind === "botw" ? body.poll.kind : null;
+    const weekStart = typeof body.poll.weekStart === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.poll.weekStart) ? body.poll.weekStart : null;
+    const choices: unknown[] = Array.isArray(body.poll.choices) ? body.poll.choices : [];
+    if (kind && weekStart && choices.length === answers.length) {
+      const allowed = allowedMetrics(kind);
+      const options = created.options.map((o, i) => ({
+        answer_id: o.answerId,
+        label: o.text,
+        metrics: (Array.isArray(choices[i]) ? (choices[i] as unknown[]) : []).filter((m): m is string => typeof m === "string" && allowed.has(m)).slice(0, 2),
+      }));
+      if (options.every((o) => o.metrics.length > 0)) {
+        const { data: savedPoll } = await supabase.from("polls").select("id").eq("discord_message_id", created.messageId).maybeSingle();
+        const { error: watchError } = await supabase.from("weekly_vote_polls").insert({
+          poll_id: savedPoll?.id ?? null,
+          channel_id: threadId,
+          message_id: created.messageId,
+          kind,
+          week_start: weekStart,
+          options,
+          closes_at: new Date(Date.now() + durationHours * 3_600_000).toISOString(),
+          created_by: user?.discord_username ?? null,
+        });
+        if (watchError) console.error("Weekly turnover: poll posted but not watched:", watchError);
+      }
+    }
   }
 
   return NextResponse.json({ completed, forumThreadId, rotated });

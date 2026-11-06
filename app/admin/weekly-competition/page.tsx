@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { DISCORD_MESSAGE_LIMIT, nextJagexWeekStart, splitDiscordMessage } from "@/lib/weekly-announcement-templates";
+import { PollChoicesEditor, type PollChoice } from "@/components/admin/PollChoicesEditor";
+import { WeeklyVotePolls } from "@/components/admin/WeeklyVotePolls";
+import { bossDifficulty, type BossTiers, type BossTitleNames, type Difficulty } from "@/lib/boss-difficulty";
+import { allowedMetrics } from "@/lib/weekly-poll-metrics";
 
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 
@@ -172,7 +176,11 @@ export default function WeeklyCompetitionPage() {
   // Which raffle the winners box was filled from (cleared once it's edited by hand).
   const [raffleSource, setRaffleSource] = useState<string | null>(null);
   const [votingThread, setVotingThread] = useState("");
-  const [pollOptionsText, setPollOptionsText] = useState("");
+  // The poll's options, each tied to a skill or boss(es) so the winner can be set up automatically.
+  const [pollChoices, setPollChoices] = useState<PollChoice[]>([]);
+  const [bossTiers, setBossTiers] = useState<BossTiers>({});
+  const [bossNames, setBossNames] = useState<BossTitleNames>({});
+  const [pollsRefresh, setPollsRefresh] = useState(0);
   const [pollWeek, setPollWeek] = useState("");
   const [pollType, setPollType] = useState<"sotw" | "botw">("botw");
   // Once the admin edits the poll's week/type, stop re-defaulting them when the next-week picks change.
@@ -180,8 +188,6 @@ export default function WeeklyCompetitionPage() {
 
   const [preview, setPreview] = useState<Preview | null>(null);
   const [include, setInclude] = useState<Record<Step, boolean>>({ results: true, forum: true, raffle: true, poll: true });
-  // The preview's poll options, kept as raw text while editing (one per line).
-  const [pollAnswersText, setPollAnswersText] = useState("");
   const [done, setDone] = useState<Step[]>([]);
   const [imageUrl, setImageUrl] = useState("");
 
@@ -248,6 +254,34 @@ export default function WeeklyCompetitionPage() {
     };
   }, []);
 
+  // Boss tiers and title names (Settings › Boss Difficulty) for the poll's boss list.
+  useEffect(() => {
+    fetch("/api/admin/boss-difficulty")
+      .then((r) => r.json())
+      .then((d: { tiers?: BossTiers; names?: BossTitleNames }) => {
+        setBossTiers(d.tiers ?? {});
+        setBossNames(d.names ?? {});
+      })
+      .catch(() => {});
+  }, []);
+
+  // Boss weeks alternate easy / hard: the poll's turn is the opposite of the latest boss week.
+  const suggestedTier = useMemo<Difficulty | null>(() => {
+    const last = competitions.filter((c) => c.type === "botw").sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt))[0];
+    if (!last) return null;
+    return bossDifficulty(last.metric, bossTiers) === "hard" ? "easy" : "hard";
+  }, [competitions, bossTiers]);
+
+  // Only complete options go on the poll.
+  const readyChoices = pollChoices.map((c) => ({ ...c, metrics: c.metrics.filter(Boolean) })).filter((c) => c.metrics.length > 0 && c.label.trim());
+
+  // A skill doesn't fit a boss poll (and vice versa): drop picks that don't match the type.
+  const changePollType = (type: "sotw" | "botw") => {
+    setPollType(type);
+    const ok = allowedMetrics(type);
+    setPollChoices((cs) => cs.map((c) => ({ ...c, metrics: c.metrics.filter((m) => !m || ok.has(m)) })).map((c) => (c.metrics.length ? c : { ...c, label: c.labelAuto ? "" : c.label })));
+  };
+
   const reload = async () => {
     const res = await fetch("/api/admin/weekly-competition");
     const data = await res.json().catch(() => ({}));
@@ -269,7 +303,7 @@ export default function WeeklyCompetitionPage() {
         raffleWinners: lines(raffleText),
         raffleAmount: Number(raffleAmount.replace(/[^\d.]/g, "")) || 0,
         votingThread,
-        pollOptions: lines(pollOptionsText),
+        pollOptions: readyChoices.map((c) => c.label.trim()),
         pollWeek,
         pollType,
       }),
@@ -278,7 +312,6 @@ export default function WeeklyCompetitionPage() {
     if (res.ok && data.preview) {
       setPreview(data.preview);
       setInclude({ results: !!data.preview.results, forum: true, raffle: !!data.preview.raffle, poll: !!data.preview.poll });
-      setPollAnswersText((data.preview.poll?.answers ?? []).join("\n"));
       setDone([]);
     } else {
       setError(data.error ?? "Failed to build the preview.");
@@ -301,7 +334,10 @@ export default function WeeklyCompetitionPage() {
         results: pending.includes("results") ? preview.results : undefined,
         forum: pending.includes("forum") ? { title: preview.forum.title, content: preview.forum.content, imageUrl: imageUrl.trim() } : undefined,
         raffle: pending.includes("raffle") ? preview.raffle : undefined,
-        poll: pending.includes("poll") && preview.poll ? { ...preview.poll, answers: lines(pollAnswersText) } : undefined,
+        poll:
+          pending.includes("poll") && preview.poll
+            ? { ...preview.poll, answers: readyChoices.map((c) => c.label.trim()), kind: pollType, weekStart: pollWeek, choices: readyChoices.map((c) => c.metrics) }
+            : undefined,
         nextEmoji: preview.nextEmoji,
         nextIds: preview.nextIds,
         nextType: preview.nextType,
@@ -314,6 +350,7 @@ export default function WeeklyCompetitionPage() {
     // A forum thread that got created counts as done even if its follow-up
     // messages failed -- retrying would make a second thread.
     setDone((prev) => [...prev, ...completed, ...(data.forumThreadId && !completed.includes("forum") ? (["forum"] as Step[]) : [])]);
+    if (completed.includes("poll")) setPollsRefresh((n) => n + 1);
     if (res.ok) {
       setStatus(`Posted: ${completed.map((s) => STEP_LABEL[s]).join(", ")}.`);
     } else {
@@ -438,9 +475,8 @@ export default function WeeklyCompetitionPage() {
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-semibold text-bark-brown mb-1">Voting poll options (one per line)</label>
-              <textarea value={pollOptionsText} onChange={(e) => setPollOptionsText(e.target.value)} rows={5} className={inputClass} placeholder={"Vardorvis\nDuke Sucellus\nPhantom Muspah\nNightmare (both reg + Phosani)"} />
-              <p className="text-xs text-iron-grey mt-1">2-10 options, 55 characters each.</p>
+              <label className="block text-sm font-semibold text-bark-brown mb-1">Voting poll options</label>
+              <PollChoicesEditor kind={pollType} choices={pollChoices} onChange={setPollChoices} tiers={bossTiers} names={bossNames} suggestedTier={pollType === "botw" ? suggestedTier : null} />
             </div>
             <div className="flex-1 space-y-3">
               <div className="flex gap-3">
@@ -449,7 +485,7 @@ export default function WeeklyCompetitionPage() {
                   <select
                     value={pollType}
                     onChange={(e) => {
-                      setPollType(e.target.value as "sotw" | "botw");
+                      changePollType(e.target.value as "sotw" | "botw");
                       setPollTouched(true);
                     }}
                     className={`${inputClass} cursor-pointer`}
@@ -541,7 +577,7 @@ export default function WeeklyCompetitionPage() {
                     {STEP_LABEL.poll}
                   </label>
                   <span className={`text-xs ${done.includes("poll") ? "text-gnome-green font-semibold" : "text-iron-grey"}`}>
-                    {done.includes("poll") ? "Posted ✓" : `${lines(pollAnswersText).length} options`}
+                    {done.includes("poll") ? "Posted ✓" : `${readyChoices.length} options`}
                   </span>
                 </div>
                 <input
@@ -552,13 +588,12 @@ export default function WeeklyCompetitionPage() {
                   onChange={(e) => setPreview((p) => (p && p.poll ? { ...p, poll: { ...p.poll, question: e.target.value } } : p))}
                   className={`${inputClass} mb-2 font-semibold`}
                 />
-                <textarea
-                  value={pollAnswersText}
-                  disabled={done.includes("poll")}
-                  onChange={(e) => setPollAnswersText(e.target.value)}
-                  rows={6}
-                  className={`${inputClass} text-sm`}
-                />
+                <ol className="list-decimal pl-6 text-sm text-bark-brown space-y-0.5">
+                  {readyChoices.map((c, i) => (
+                    <li key={i}>{c.label}</li>
+                  ))}
+                </ol>
+                <p className="text-xs text-iron-grey mt-1">Change the options in the form above; this list follows it. The winner is set up automatically when the poll closes.</p>
                 <div className="flex items-center gap-2 mt-2">
                   <label className="text-xs text-iron-grey">Closes after</label>
                   <select
@@ -581,6 +616,8 @@ export default function WeeklyCompetitionPage() {
           </div>
         )}
       </Card>
+
+      <WeeklyVotePolls refreshKey={pollsRefresh} />
     </div>
   );
 }

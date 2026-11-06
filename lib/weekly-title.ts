@@ -47,3 +47,9 @@ export function nextWeeklyStart(now = new Date()): Date {
   const day = new Date(Date.UTC(p.y, p.m - 1, p.d + ahead));
   return fromClanTime(day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), 20);
 }
+
+/** 8 PM clan time on a "YYYY-MM-DD" day (the weekly start), as an instant. */
+export function weeklyStartOn(day: string): Date {
+  const [y, m, d] = day.split("-").map(Number);
+  return fromClanTime(y, m, d, 20);
+}

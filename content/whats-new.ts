@@ -36,6 +36,21 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 7, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-07-weekly-poll-auto-competition",
+    date: "2026-11-07",
+    kind: "new",
+    audience: "staff",
+    title: "The weekly SOTW/BotW poll now sets up the winning competition",
+    summary:
+      "On Weekly SOTW/BotW, the voting poll's options are now picked from lists instead of typed: skills for Skill of the Week, or the bosses from Boss Difficulty (Hard and Easy, with the one that's due next at the top) for Boss of the Week. One option can hold two bosses, like Nightmare + Phosani's, which makes two competitions if it wins. The site watches the poll, and when it closes the winner is set up on Wise Old Man for the whole clan: starting 8 PM Eastern on the poll's Sunday, running a week, with the usual title. A new section at the bottom shows each poll's votes and what happened. If there's a tie or nobody votes, it waits there for you to pick. You can also turn automatic setup off, set the number of winners to pay out, and choose whether to announce it.",
+    tryIt: [
+      "Go to Admin › Competitions › Weekly SOTW/BotW and pick the poll's options with + Add an option.",
+      "Post as usual. The poll then shows under When the voting poll closes, with its closing time.",
+      "After it closes, check the same section: the competition is linked there, or a tie is waiting for you to pick.",
+    ],
+    links: [{ label: "Weekly SOTW/BotW", href: "/admin/weekly-competition" }],
+  },
+  {
     id: "2026-11-07-wom-edit-verification-fix",
     date: "2026-11-07",
     kind: "fixed",
