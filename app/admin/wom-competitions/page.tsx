@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { bossDifficulty, bossTitleName, DIFFICULTY_LABEL, type BossTiers, type BossTitleNames, type Difficulty } from "@/lib/boss-difficulty";
+import { nextWeeklyStart, weeklyTitle, WEEKLY_LABEL, type WeeklyKind } from "@/lib/weekly-title";
 import Link from "next/link";
 import { SKILLS, BOSSES, ACTIVITIES, COMPUTED_METRICS, MetricProps } from "@wise-old-man/utils";
 import { Card } from "@/components/ui/Card";
@@ -48,8 +50,18 @@ function toDatetimeLocal(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+type BuilderKind = WeeklyKind | "custom";
+const WEEK_MS = 7 * 86_400_000;
+
 export default function WomCompetitionsPage() {
   const [step, setStep] = useState(0);
+
+  // Skill / Boss of the Week fill in the title and dates; Custom is the free-form builder.
+  const [kind, setKind] = useState<BuilderKind>("custom");
+  const [titleAuto, setTitleAuto] = useState(true);
+  const [endAuto, setEndAuto] = useState(true);
+  const [bossTiers, setBossTiers] = useState<BossTiers>({});
+  const [bossNames, setBossNames] = useState<BossTitleNames>({});
 
   const [title, setTitle] = useState("");
   const [metric, setMetric] = useState("overall");
@@ -86,8 +98,71 @@ export default function WomCompetitionsPage() {
 
   useEffect(() => { loadList(); }, [loadList]);
 
+  // Boss tiers and title names from Settings › Boss Difficulty.
+  useEffect(() => {
+    fetch("/api/admin/boss-difficulty")
+      .then((r) => r.json())
+      .then((d: { tiers?: BossTiers; names?: BossTitleNames }) => {
+        setBossTiers(d.tiers ?? {});
+        setBossNames(d.names ?? {});
+      })
+      .catch(() => {});
+  }, []);
+
+  // The last Boss of the Week, so the next one can alternate easy / hard.
+  const lastBossWeek = useMemo(() => {
+    const boss = competitions
+      .filter((c) => /boss of the week|\bbotw\b/i.test(c.title) || (BOSSES as readonly string[]).includes(c.metric))
+      .sort((a, b) => Date.parse(b.starts_at) - Date.parse(a.starts_at))[0];
+    return boss ? { comp: boss, tier: bossDifficulty(boss.metric, bossTiers) } : null;
+  }, [competitions, bossTiers]);
+  const suggestedTier: Difficulty | null = lastBossWeek ? (lastBossWeek.tier === "hard" ? "easy" : "hard") : null;
+
+  const titleName = (m: string) => (kind === "botw" ? bossTitleName(m, bossNames) : metricLabel(m));
+  const autoTitle = kind === "custom" ? "" : weeklyTitle(kind, startsAt ? new Date(startsAt) : null, titleName(metric));
+  // Keep the title in step with the boss/skill and date until someone types their own.
+  const shownTitle = kind !== "custom" && titleAuto ? autoTitle : title;
+
+  const pickKind = (k: BuilderKind) => {
+    setKind(k);
+    setTitleAuto(true);
+    if (k === "custom") return;
+    const list = k === "sotw" ? [...SKILLS] : [...BOSSES];
+    if (!(list as string[]).includes(metric)) {
+      const first = k === "botw" && suggestedTier ? (BOSSES as readonly string[]).find((b) => bossDifficulty(b, bossTiers) === suggestedTier) : undefined;
+      setMetric(first ?? (k === "sotw" ? "mining" : list[0]));
+    }
+    if (!startsAt) {
+      const start = nextWeeklyStart();
+      setStartsAt(toDatetimeLocal(start.toISOString()));
+      setEndsAt(toDatetimeLocal(new Date(start.getTime() + WEEK_MS).toISOString()));
+      setEndAuto(true);
+    }
+  };
+
+  const changeStart = (value: string) => {
+    setStartsAt(value);
+    // A week long by default; stops following once the end is set by hand.
+    if (value && (endAuto || !endsAt)) {
+      setEndsAt(toDatetimeLocal(new Date(new Date(value).getTime() + WEEK_MS).toISOString()));
+      setEndAuto(true);
+    }
+  };
+
+  const bossOptions = useMemo(() => {
+    const order: Difficulty[] = suggestedTier === "easy" ? ["easy", "hard"] : ["hard", "easy"];
+    const byName = (a: string, b: string) => bossTitleName(a, bossNames).localeCompare(bossTitleName(b, bossNames));
+    return order.map((tier) => ({
+      tier,
+      metrics: (BOSSES as readonly string[]).filter((b) => bossDifficulty(b, bossTiers) === tier).sort(byName),
+    }));
+  }, [bossTiers, bossNames, suggestedTier]);
+
   const resetWizard = () => {
     setStep(0);
+    setKind("custom");
+    setTitleAuto(true);
+    setEndAuto(true);
     setTitle("");
     setMetric("overall");
     setStartsAt("");
@@ -120,7 +195,7 @@ export default function WomCompetitionsPage() {
     updateTeam(ti, { participants: teams[ti].participants.filter((_, idx) => idx !== pi) });
 
   const stepValid: boolean[] = [
-    !!title.trim() && !!metric && !!startsAt && !!endsAt && new Date(endsAt) > new Date(startsAt),
+    !!shownTitle.trim() && !!metric && !!startsAt && !!endsAt && new Date(endsAt) > new Date(startsAt),
     participantMode === "clan"
       ? clanAutoIncludeAvailable
       : participantMode === "participants"
@@ -136,7 +211,7 @@ export default function WomCompetitionsPage() {
     setStatus(null);
 
     const body: Record<string, unknown> = {
-      title,
+      title: shownTitle,
       metric,
       startsAt: startsAt ? new Date(startsAt).toISOString() : undefined,
       endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
@@ -226,30 +301,112 @@ export default function WomCompetitionsPage() {
         {step === 0 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-bark-brown mb-1">Title *</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} placeholder="Skill of the Week" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-bark-brown mb-1">Metric *</label>
-              <select value={metric} onChange={(e) => setMetric(e.target.value)} className={`${inputClass} cursor-pointer`}>
-                {METRIC_GROUPS.map((group) => (
-                  <optgroup key={group.label} label={group.label}>
-                    {group.metrics.map((m) => (
-                      <option key={m} value={m}>{metricLabel(m)}</option>
-                    ))}
-                  </optgroup>
+              <p className="block text-sm font-semibold text-bark-brown mb-1">What kind of competition?</p>
+              <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Competition kind">
+                {([
+                  ["sotw", WEEKLY_LABEL.sotw, "Pick a skill; the title and dates fill themselves in."],
+                  ["botw", WEEKLY_LABEL.botw, "Pick from your easy / hard boss list."],
+                  ["custom", "Custom", "Any metric, your own title and dates."],
+                ] as [BuilderKind, string, string][]).map(([k, label, text]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    role="radio"
+                    aria-checked={kind === k}
+                    onClick={() => pickKind(k)}
+                    className={`text-left rounded-md border p-2.5 text-sm transition-colors ${kind === k ? "border-gnome-green bg-gnome-green/10" : "border-bark-brown-light/40 hover:bg-parchment-dark/40"}`}
+                  >
+                    <span className="font-semibold text-bark-brown">{label}</span>
+                    <span className="block text-xs text-iron-grey mt-0.5">{text}</span>
+                  </button>
                 ))}
+              </div>
+            </div>
+
+            {kind === "botw" && (
+              <p className="text-xs text-bark-brown-light">
+                {lastBossWeek ? (
+                  <>
+                    Last boss week was <b>{lastBossWeek.comp.title}</b>, {lastBossWeek.tier === "easy" ? "an easy" : "a hard"} week, so this one would be{" "}
+                    <b>{suggestedTier && DIFFICULTY_LABEL[suggestedTier].toLowerCase()}</b>.{" "}
+                  </>
+                ) : null}
+                Easy and hard bosses, and the names used in titles, are set in{" "}
+                <Link href="/admin/boss-difficulty" className="text-gnome-green hover:underline">
+                  Settings › Boss Difficulty
+                </Link>
+                .
+              </p>
+            )}
+
+            <div>
+              <label className="block text-sm font-semibold text-bark-brown mb-1">{kind === "sotw" ? "Skill *" : kind === "botw" ? "Boss *" : "Metric *"}</label>
+              <select value={metric} onChange={(e) => setMetric(e.target.value)} className={`${inputClass} cursor-pointer`}>
+                {kind === "sotw" &&
+                  SKILLS.filter((m) => m !== "overall").map((m) => (
+                    <option key={m} value={m}>{metricLabel(m)}</option>
+                  ))}
+                {kind === "botw" &&
+                  bossOptions.map(({ tier, metrics }) => (
+                    <optgroup key={tier} label={`${DIFFICULTY_LABEL[tier]} bosses${tier === suggestedTier ? " (this week's turn)" : ""}`}>
+                      {metrics.map((m) => (
+                        <option key={m} value={m}>
+                          {bossTitleName(m, bossNames)}
+                          {bossTitleName(m, bossNames) !== metricLabel(m) ? ` (${metricLabel(m)})` : ""}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                {kind === "custom" &&
+                  METRIC_GROUPS.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.metrics.map((m) => (
+                        <option key={m} value={m}>{metricLabel(m)}</option>
+                      ))}
+                    </optgroup>
+                  ))}
               </select>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-semibold text-bark-brown mb-1">Starts *</label>
-                <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} className={inputClass} />
+                <input type="datetime-local" value={startsAt} onChange={(e) => changeStart(e.target.value)} className={inputClass} />
+                {kind !== "custom" && <p className="text-xs text-iron-grey mt-1">Defaults to next Sunday, 8 PM Eastern. Your computer&apos;s time zone is shown.</p>}
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-semibold text-bark-brown mb-1">Ends *</label>
-                <input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} className={inputClass} />
+                <input
+                  type="datetime-local"
+                  value={endsAt}
+                  onChange={(e) => {
+                    setEndsAt(e.target.value);
+                    setEndAuto(false);
+                  }}
+                  className={inputClass}
+                />
+                {kind !== "custom" && endAuto && <p className="text-xs text-iron-grey mt-1">A week after the start, unless you change it.</p>}
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-bark-brown mb-1">Title *</label>
+              <input
+                type="text"
+                value={shownTitle}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setTitleAuto(false);
+                }}
+                className={inputClass}
+                placeholder={kind === "custom" ? "Skill of the Week" : undefined}
+              />
+              {kind !== "custom" &&
+                (titleAuto ? (
+                  <p className="text-xs text-iron-grey mt-1">Filled in automatically: type | start date (Eastern) | {kind === "botw" ? "boss" : "skill"}. Type over it to change it.</p>
+                ) : (
+                  <button type="button" onClick={() => setTitleAuto(true)} className="text-xs text-gnome-green hover:underline mt-1">
+                    Use the automatic title ({autoTitle})
+                  </button>
+                ))}
             </div>
             {startsAt && endsAt && new Date(endsAt) <= new Date(startsAt) && (
               <p className="text-xs text-red-accent">End time must be after the start time.</p>
@@ -384,7 +541,7 @@ export default function WomCompetitionsPage() {
             {postToDiscord && (
               <div className="bg-[#313338] text-[#dbdee1] font-sans text-sm leading-relaxed rounded-lg border border-[#1e1f22] p-4">
                 <pre className="whitespace-pre-wrap break-words font-sans text-[13px]">
-                  {`🏆 New competition: ${title || "(title)"}\nMetric: ${metricLabel(metric)}\nStarts: ${startsAt ? new Date(startsAt).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "(date)"}\nhttps://wiseoldman.net/competitions/...`}
+                  {`🏆 New competition: ${shownTitle || "(title)"}\nMetric: ${metricLabel(metric)}\nStarts: ${startsAt ? new Date(startsAt).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "(date)"}\nhttps://wiseoldman.net/competitions/...`}
                 </pre>
               </div>
             )}
@@ -394,7 +551,7 @@ export default function WomCompetitionsPage() {
         {/* Step 3: Review */}
         {step === 3 && (
           <div className="space-y-3 text-sm">
-            <div><span className="text-iron-grey">Title:</span> <span className="font-semibold text-bark-brown">{title}</span></div>
+            <div><span className="text-iron-grey">Title:</span> <span className="font-semibold text-bark-brown">{shownTitle}</span></div>
             <div><span className="text-iron-grey">Metric:</span> <span className="font-semibold text-bark-brown">{metricLabel(metric)}</span></div>
             <div>
               <span className="text-iron-grey">Starts:</span>{" "}

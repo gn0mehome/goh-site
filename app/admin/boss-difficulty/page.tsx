@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { inputClass } from "@/components/admin/bingo/BasicsStep";
-import { bossDifficulty, bossGroups, bossName, DIFFICULTIES, DIFFICULTY_LABEL, type BossTiers, type Difficulty } from "@/lib/boss-difficulty";
+import { bossDifficulty, bossGroups, bossName, DIFFICULTIES, DIFFICULTY_LABEL, type BossTiers, type BossTitleNames, type Difficulty } from "@/lib/boss-difficulty";
 import { cn } from "@/lib/utils";
 
 type Show = "all" | Difficulty | "unsaved";
@@ -14,6 +14,9 @@ export default function BossDifficultyPage() {
   const groups = useMemo(() => bossGroups(), []);
   const [saved, setSaved] = useState<BossTiers | null>(null);
   const [draft, setDraft] = useState<BossTiers>({});
+  const [savedNames, setSavedNames] = useState<BossTitleNames>({});
+  const [names, setNames] = useState<BossTitleNames>({});
+  const [renaming, setRenaming] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [show, setShow] = useState<Show>("all");
   const [saving, setSaving] = useState(false);
@@ -23,9 +26,11 @@ export default function BossDifficultyPage() {
     let cancelled = false;
     fetch("/api/admin/boss-difficulty")
       .then((r) => r.json())
-      .then((d: { tiers?: BossTiers }) => {
+      .then((d: { tiers?: BossTiers; names?: BossTitleNames }) => {
         if (cancelled) return;
         setSaved(d.tiers ?? {});
+        setSavedNames(d.names ?? {});
+        setNames(d.names ?? {});
         // Every boss starts at its saved tier, or the suggestion if it's never been set.
         setDraft(Object.fromEntries(groups.flatMap((g) => g.metrics).map((m) => [m, bossDifficulty(m, d.tiers ?? {})])));
       })
@@ -42,23 +47,26 @@ export default function BossDifficultyPage() {
 
   const all = groups.flatMap((g) => g.metrics);
   // A change is a boss set differently from what's in use now (its saved tier, or the suggestion).
-  const changed = saved ? all.filter((m) => bossDifficulty(m, saved) !== draft[m]) : [];
+  const nameOf = (x: BossTitleNames, m: string) => x[m]?.trim() ?? "";
+  const changed = saved ? all.filter((m) => bossDifficulty(m, saved) !== draft[m] || nameOf(names, m) !== nameOf(savedNames, m)) : [];
   const neverSet = saved ? all.filter((m) => !saved[m]).length : 0;
   const counts = { easy: all.filter((m) => draft[m] === "easy").length, hard: all.filter((m) => draft[m] === "hard").length };
 
   const save = async () => {
     setSaving(true);
-    const res = await fetch("/api/admin/boss-difficulty", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tiers: draft }) });
+    const res = await fetch("/api/admin/boss-difficulty", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tiers: draft, names }) });
     const json = await res.json().catch(() => ({}));
     setSaving(false);
     if (!res.ok) return setStatus({ ok: false, text: json.error ?? "Couldn't save." });
     setSaved({ ...draft });
+    setSavedNames({ ...names });
+    setRenaming(null);
     setStatus({ ok: true, text: "Saved. The SOTW & BotW Dashboard tab uses these straight away." });
   };
 
   const q = query.trim().toLowerCase();
   const visible = (m: string) =>
-    (!q || bossName(m).toLowerCase().includes(q)) && (show === "all" || (show === "unsaved" ? !saved?.[m] || bossDifficulty(m, saved) !== draft[m] : draft[m] === show));
+    (!q || bossName(m).toLowerCase().includes(q) || nameOf(names, m).toLowerCase().includes(q)) && (show === "all" || (show === "unsaved" ? !saved?.[m] || bossDifficulty(m, saved) !== draft[m] : draft[m] === show));
 
   return (
     <div className="space-y-6 pb-20">
@@ -69,7 +77,7 @@ export default function BossDifficultyPage() {
           <Link href="/admin/competition-insights" className="text-gnome-green hover:underline">
             SOTW &amp; BotW
           </Link>{" "}
-          Dashboard tab compares easy weeks with hard weeks. If one week was different from usual, you can change just that week on the Dashboard.
+          Dashboard tab compares easy weeks with hard weeks. If one week was different from usual, you can change just that week on the Dashboard. Use &quot;rename for titles&quot; when the clan calls a boss something else (e.g. Perilous Moons for Lunar Chests); the WOM Competitions builder puts that name in Boss of the Week titles.
         </p>
       </div>
 
@@ -109,9 +117,35 @@ export default function BossDifficultyPage() {
                   {rows.map((m) => (
                     <li key={m} className="flex items-center justify-between gap-3 py-1.5 border-b border-bark-brown-light/20">
                       <span className="text-sm text-bark-brown min-w-0">
-                        {bossName(m)}
+                        {renaming === m ? (
+                          <input
+                            autoFocus
+                            value={names[m] ?? ""}
+                            maxLength={60}
+                            placeholder={bossName(m)}
+                            aria-label={`Name for ${bossName(m)} in titles`}
+                            onChange={(e) => {
+                              setNames((x) => ({ ...x, [m]: e.target.value }));
+                              setStatus(null);
+                            }}
+                            onKeyDown={(e) => (e.key === "Enter" || e.key === "Escape") && setRenaming(null)}
+                            onBlur={() => setRenaming(null)}
+                            className="w-full max-w-[14rem] rounded border border-bark-brown-light bg-parchment px-1.5 py-0.5 text-sm"
+                          />
+                        ) : nameOf(names, m) ? (
+                          <>
+                            {nameOf(names, m)} <span className="text-[11px] text-iron-grey">({bossName(m)})</span>
+                          </>
+                        ) : (
+                          bossName(m)
+                        )}
+                        {renaming !== m && (
+                          <button type="button" onClick={() => setRenaming(m)} className="ml-1.5 text-[11px] text-gnome-green hover:underline">
+                            {nameOf(names, m) ? "rename" : "rename for titles"}
+                          </button>
+                        )}
                         {!saved[m] && bossDifficulty(m, saved) === draft[m] && <span className="ml-1.5 text-[11px] text-iron-grey">suggested</span>}
-                        {bossDifficulty(m, saved) !== draft[m] && <span className="ml-1.5 text-[11px] text-gold-display font-semibold">changed</span>}
+                        {(bossDifficulty(m, saved) !== draft[m] || nameOf(names, m) !== nameOf(savedNames, m)) && <span className="ml-1.5 text-[11px] text-gold-display font-semibold">changed</span>}
                       </span>
                       <span className="inline-flex shrink-0 rounded-md border border-bark-brown-light/60 overflow-hidden" role="radiogroup" aria-label={`${bossName(m)} difficulty`}>
                         {DIFFICULTIES.map((d) => (

@@ -12,6 +12,8 @@ export const DIFFICULTIES: Difficulty[] = ["easy", "hard"];
 
 /** Saved tiers by WOM boss metric. */
 export type BossTiers = Record<string, Difficulty>;
+/** Names bosses go by in Boss of the Week titles, by metric (only where set). */
+export type BossTitleNames = Record<string, string>;
 
 const SUGGESTED_HARD = new Set([
   "alchemical_hydra", "araxxor", "chambers_of_xeric", "chambers_of_xeric_challenge_mode", "doom_of_mokhaiotl",
@@ -31,6 +33,9 @@ export function bossDifficulty(metric: string, tiers: BossTiers): Difficulty {
 }
 
 export const bossName = (metric: string) => (MetricProps as Record<string, { name: string }>)[metric]?.name ?? metric.replace(/_/g, " ");
+
+/** The name for a Boss of the Week title: the clan's own name for it if set, else Wise Old Man's. */
+export const bossTitleName = (metric: string, names: BossTitleNames) => names[metric]?.trim() || bossName(metric);
 
 const RAIDS = ["chambers_of_xeric", "chambers_of_xeric_challenge_mode", "theatre_of_blood", "theatre_of_blood_hard_mode", "tombs_of_amascut", "tombs_of_amascut_expert"];
 const WILDERNESS = ["artio", "callisto", "calvarion", "chaos_elemental", "chaos_fanatic", "crazy_archaeologist", "deranged_archaeologist", "king_black_dragon", "scorpia", "spindel", "venenatis", "vetion"];
