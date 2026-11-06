@@ -36,6 +36,17 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 7, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-07-wom-edit-verification-fix",
+    date: "2026-11-07",
+    kind: "fixed",
+    audience: "staff",
+    title: "Editing clan competitions works again",
+    summary:
+      "Saving changes to a whole-clan competition in WOM Competitions (title, boss, dates) failed with \"Incorrect verification code\". The same went for deleting one, adding or removing players, and refreshing participants' stats. Wise Old Man checks clan competitions against the clan group's code, and the site now uses it.",
+    tryIt: ["Go to Admin › Competitions › WOM Competitions, open a competition, change its title and press Save Changes."],
+    links: [{ label: "WOM Competitions", href: "/admin/wom-competitions" }],
+  },
+  {
     id: "2026-11-07-weekly-competition-builder",
     date: "2026-11-07",
     kind: "improved",

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
-import { updateAllWomParticipants } from "@/lib/wom";
+import { updateAllWomParticipants, withCompetitionCode } from "@/lib/wom";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -25,13 +25,13 @@ export async function POST(
 
   const { data: row } = await supabase
     .from("wom_competitions")
-    .select("wom_id, verification_code")
+    .select("wom_id, verification_code, group_linked")
     .eq("id", id)
     .maybeSingle();
   if (!row) return NextResponse.json({ error: "Competition not found." }, { status: 404 });
 
   try {
-    const result = await updateAllWomParticipants(row.wom_id, row.verification_code);
+    const result = await withCompetitionCode(row, (code) => updateAllWomParticipants(row.wom_id, code));
     return NextResponse.json({ message: result.message });
   } catch (err) {
     console.error("WOM update-all failed:", err);

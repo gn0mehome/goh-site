@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
-import { addWomParticipants, removeWomParticipants } from "@/lib/wom";
+import { addWomParticipants, removeWomParticipants, withCompetitionCode } from "@/lib/wom";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -43,7 +43,7 @@ export async function POST(
 
   let result;
   try {
-    result = await addWomParticipants(row.wom_id, participants, row.verification_code);
+    result = await withCompetitionCode(row, (code) => addWomParticipants(row.wom_id, participants, code));
   } catch (err) {
     console.error("WOM add participants failed:", err);
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to add participants on WOM." }, { status: 502 });
@@ -85,7 +85,7 @@ export async function DELETE(
 
   let result;
   try {
-    result = await removeWomParticipants(row.wom_id, participants, row.verification_code);
+    result = await withCompetitionCode(row, (code) => removeWomParticipants(row.wom_id, participants, code));
   } catch (err) {
     console.error("WOM remove participants failed:", err);
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to remove participants on WOM." }, { status: 502 });

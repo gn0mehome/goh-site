@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { SKILLS, BOSSES, ACTIVITIES, COMPUTED_METRICS } from "@wise-old-man/utils";
 import { checkPermission } from "@/lib/check-permission";
-import { deleteWomCompetition, editWomCompetition } from "@/lib/wom";
+import { deleteWomCompetition, editWomCompetition, withCompetitionCode } from "@/lib/wom";
 
 const VALID_METRICS = new Set<string>([...SKILLS, ...BOSSES, ...ACTIVITIES, ...COMPUTED_METRICS]);
 
@@ -28,7 +28,7 @@ export async function PUT(
 
   const { data: row } = await supabase
     .from("wom_competitions")
-    .select("wom_id, verification_code, type")
+    .select("wom_id, verification_code, type, group_linked")
     .eq("id", id)
     .maybeSingle();
   if (!row) return NextResponse.json({ error: "Competition not found." }, { status: 404 });
@@ -82,7 +82,7 @@ export async function PUT(
   }
 
   try {
-    await editWomCompetition(row.wom_id, womPayload, row.verification_code);
+    await withCompetitionCode(row, (code) => editWomCompetition(row.wom_id, womPayload, code));
   } catch (err) {
     console.error("WOM competition edit failed:", err);
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to update the competition on WOM." }, { status: 502 });
@@ -109,14 +109,14 @@ export async function DELETE(
 
   const { data: row } = await supabase
     .from("wom_competitions")
-    .select("wom_id, verification_code")
+    .select("wom_id, verification_code, group_linked")
     .eq("id", id)
     .maybeSingle();
 
   if (!row) return NextResponse.json({ error: "Competition not found." }, { status: 404 });
 
   try {
-    await deleteWomCompetition(row.wom_id, row.verification_code);
+    await withCompetitionCode(row, (code) => deleteWomCompetition(row.wom_id, code));
   } catch (err) {
     console.error("WOM competition deletion failed:", err);
     return NextResponse.json(
