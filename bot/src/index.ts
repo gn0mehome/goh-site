@@ -127,13 +127,15 @@ client.once(Events.ClientReady, async (c) => {
   setInterval(syncDroptracker, 5 * 60 * 1000);
 
   // Keep live bingo boards' tracked tiles fresh (the site skips boards it updated recently).
-  // Same for quest events' WikiSync checks.
-  const { syncBingo, syncQuests } = await import("./lib/api.js");
+  // Same for quest events' WikiSync checks, and closed weekly SOTW/BotW polls.
+  const { syncBingo, syncQuests, syncWeeklyPoll } = await import("./lib/api.js");
   syncBingo();
   syncQuests();
+  syncWeeklyPoll();
   setInterval(() => {
     syncBingo();
     syncQuests();
+    syncWeeklyPoll();
   }, 30 * 60 * 1000);
 });
 

@@ -79,6 +79,11 @@ export async function syncQuests() {
   await apiCall("/api/bot/quests", { method: "POST", body: JSON.stringify({ action: "sync" }) }).catch(() => undefined);
 }
 
+/** Asks the site to check closed weekly SOTW/BotW polls and set up the winners' competitions. */
+export async function syncWeeklyPoll() {
+  await apiCall("/api/bot/weekly-poll", { method: "POST", body: "{}" }).catch(() => undefined);
+}
+
 /** Asks the site to read DropTracker's drop feed (it skips when no bingo is live). */
 export async function syncDroptracker() {
   await apiCall("/api/bot/droptracker", { method: "POST", body: "{}" }).catch(() => undefined);
