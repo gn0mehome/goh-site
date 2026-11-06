@@ -7,4 +7,5 @@ export const ROLES_ACCESS_TABS = [
 export const OVERVIEW_TABS = [
   { href: "/admin", label: "Clan Overview" },
   { href: "/admin/activity", label: "Player Activity" },
+  { href: "/admin/competition-insights", label: "SOTW & BotW" },
 ];

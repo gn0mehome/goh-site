@@ -12,7 +12,7 @@ function getServiceClient() {
 
 // GET - every stored competition and who gained in it (the dashboard does the maths).
 export async function GET() {
-  const { allowed } = await checkPermission("manage_competitions");
+  const { allowed } = await checkPermission("view_admin");
   if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
@@ -22,7 +22,7 @@ export async function GET() {
 // POST - pull a few more competitions from Wise Old Man. The page calls this
 // until `pending` reaches 0.
 export async function POST() {
-  const { allowed } = await checkPermission("manage_competitions");
+  const { allowed } = await checkPermission("view_admin");
   if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });

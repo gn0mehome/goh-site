@@ -5,6 +5,8 @@ import Link from "next/link";
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { AdminTabs } from "@/components/admin/AdminTabs";
+import { OVERVIEW_TABS } from "@/lib/admin-tabs";
 import type { CompetitionKind, CompetitionRow, PlayerResultTuple } from "@/lib/competition-insights";
 import { computeInsights, QUIET_AFTER, REGULAR_MIN, type CompetitionStat, type PlayerStat } from "@/lib/competition-insights-stats";
 
@@ -208,7 +210,8 @@ export default function CompetitionInsightsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl text-gnome-green mb-2">SOTW &amp; BotW Insights</h1>
+        <h1 className="font-display text-3xl text-gnome-green mb-4">Dashboard</h1>
+        <AdminTabs tabs={OVERVIEW_TABS} />
         <p className="text-bark-brown-light max-w-3xl">
           How the clan takes part in Skill and Boss of the Week: how many compete, who keeps coming back, who wins, and which regulars have gone quiet. Someone counts as
           competing when they gained at least 1 XP or kill. Results come from{" "}
