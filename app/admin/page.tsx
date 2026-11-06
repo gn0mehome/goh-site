@@ -1,9 +1,11 @@
 "use client";
 
 import { AdminTabs } from "@/components/admin/AdminTabs";
+import { ExportHeader, ExportMenu } from "@/components/admin/ExportMenu";
+import type { ExportSheet } from "@/lib/export-xlsx";
 import { OVERVIEW_TABS } from "@/lib/admin-tabs";
 import { NeedsAttention } from "@/components/admin/NeedsAttention";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -53,6 +55,7 @@ export default function AdminDashboard() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [capturing, setCapturing] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const supabase = createSupabaseBrowserClient();
 
@@ -144,17 +147,58 @@ export default function AdminDashboard() {
   const memberDelta = latest && weekAgo ? latest.member_count - weekAgo.member_count : 0;
   const expDelta = latest && weekAgo ? latest.total_exp - weekAgo.total_exp : 0;
 
+  // The Excel workbook: today's numbers, every daily snapshot, and the two lists.
+  const buildSheets = (): ExportSheet[] => [
+    {
+      name: "Summary",
+      rows: [
+        ["Gn0me Home · Clan Overview"],
+        ["Exported", new Date().toLocaleString()],
+        [],
+        ["Clan members", currentStats?.members ?? null, "change over 7 snapshots", memberDelta],
+        ["Total XP", currentStats?.exp ?? null, "change over 7 snapshots", expDelta],
+        ["Total EHP", currentStats ? Math.round(currentStats.ehp) : null],
+        ["Total EHB", currentStats ? Math.round(currentStats.ehb) : null],
+        ["Site users", currentStats?.users ?? null],
+        ["Linked RSNs", currentStats?.linked ?? null],
+        ["Events", currentStats?.events ?? null],
+      ],
+    },
+    {
+      name: "Daily snapshots",
+      rows: [
+        ["Date", "Clan members", "Total XP", "Total EHP", "Total EHB", "Site users", "Linked RSNs", "Events"],
+        ...snapshots.map((s) => [s.date, s.member_count, s.total_exp, Math.round(s.total_ehp), Math.round(s.total_ehb), s.registered_users, s.linked_rsns, s.events_count]),
+      ],
+    },
+    {
+      name: "Newest WOM members",
+      rows: [["RSN", "Account type", "Joined the WOM group"], ...recentMembers.map((m) => [m.displayName, m.type.replace(/_/g, " "), m.registeredAt.slice(0, 10)])],
+    },
+    {
+      name: "Recent site registrations",
+      rows: [["Discord name", "RSN", "Registered"], ...recentUsers.map((u) => [u.discord_nickname ?? u.discord_username, u.rsn ?? "", u.created_at.slice(0, 10)])],
+    },
+  ];
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between gap-3 mb-4" data-export-hide>
         <h1 className="font-display text-3xl text-gnome-green">Dashboard</h1>
-        <Button variant="ghost" size="sm" onClick={captureSnapshot} disabled={capturing}>
-          {capturing ? "Capturing..." : "📸 Capture Snapshot"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={captureSnapshot} disabled={capturing}>
+            {capturing ? "Capturing..." : "📸 Capture Snapshot"}
+          </Button>
+          <ExportMenu title="Clan Overview" captureRef={reportRef} sheets={buildSheets} />
+        </div>
       </div>
-      <AdminTabs tabs={OVERVIEW_TABS} />
+      <div data-export-hide>
+        <AdminTabs tabs={OVERVIEW_TABS} />
+        <NeedsAttention />
+      </div>
 
-      <NeedsAttention />
+      <div ref={reportRef}>
+      <ExportHeader title="Clan Overview" />
 
       {/* Live Stats */}
       {currentStats && (
@@ -180,7 +224,7 @@ export default function AdminDashboard() {
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />
                 <YAxis tick={{ fontSize: 10, fill: "#555" }} domain={["dataMin - 2", "dataMax + 2"]} />
                 <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
-                <Area type="monotone" dataKey="member_count" stroke="#2D5016" fill="#2D501640" strokeWidth={2} name="Members" />
+                <Area isAnimationActive={false} type="monotone" dataKey="member_count" stroke="#2D5016" fill="#2D501640" strokeWidth={2} name="Members" />
               </AreaChart>
             </ResponsiveContainer>
           </Card>
@@ -193,7 +237,7 @@ export default function AdminDashboard() {
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />
                 <YAxis tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(v: number) => formatNum(v)} />
                 <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} formatter={(v) => [formatNum(Number(v)), "Total XP"]} />
-                <Area type="monotone" dataKey="total_exp" stroke="#DAA520" fill="#DAA52040" strokeWidth={2} name="Total XP" />
+                <Area isAnimationActive={false} type="monotone" dataKey="total_exp" stroke="#DAA520" fill="#DAA52040" strokeWidth={2} name="Total XP" />
               </AreaChart>
             </ResponsiveContainer>
           </Card>
@@ -206,8 +250,8 @@ export default function AdminDashboard() {
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />
                 <YAxis tick={{ fontSize: 10, fill: "#555" }} />
                 <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
-                <Line type="monotone" dataKey="registered_users" stroke="#4A7C23" strokeWidth={2} dot={false} name="Registered" />
-                <Line type="monotone" dataKey="linked_rsns" stroke="#DAA520" strokeWidth={2} dot={false} name="Linked RSNs" />
+                <Line isAnimationActive={false} type="monotone" dataKey="registered_users" stroke="#4A7C23" strokeWidth={2} dot={false} name="Registered" />
+                <Line isAnimationActive={false} type="monotone" dataKey="linked_rsns" stroke="#DAA520" strokeWidth={2} dot={false} name="Linked RSNs" />
               </LineChart>
             </ResponsiveContainer>
           </Card>
@@ -220,8 +264,8 @@ export default function AdminDashboard() {
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />
                 <YAxis tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(v: number) => formatNum(v)} />
                 <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} formatter={(v) => [formatNum(Number(v))]} />
-                <Line type="monotone" dataKey="total_ehp" stroke="#2D5016" strokeWidth={2} dot={false} name="EHP" />
-                <Line type="monotone" dataKey="total_ehb" stroke="#8B1A1A" strokeWidth={2} dot={false} name="EHB" />
+                <Line isAnimationActive={false} type="monotone" dataKey="total_ehp" stroke="#2D5016" strokeWidth={2} dot={false} name="EHP" />
+                <Line isAnimationActive={false} type="monotone" dataKey="total_ehb" stroke="#8B1A1A" strokeWidth={2} dot={false} name="EHB" />
               </LineChart>
             </ResponsiveContainer>
           </Card>
@@ -286,6 +330,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </Card>
+      </div>
       </div>
     </div>
   );

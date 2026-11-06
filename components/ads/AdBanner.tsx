@@ -31,7 +31,7 @@ export function AdBanner() {
   if (!ADSENSE_CLIENT_ID || !ADSENSE_FOOTER_SLOT) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4">
+    <div data-print-hide className="max-w-7xl mx-auto px-4 py-4">
       <ins
         className="adsbygoogle block"
         style={{ display: "block" }}

@@ -18,6 +18,7 @@
     "@supabase/supabase-js": "^2.103.0",
     "@wise-old-man/utils": "^4.0.14",
     "gray-matter": "^4.0.3",
+    "html-to-image": "1.11.13",
     "next": "16.2.3",
     "next-mdx-remote": "^6.0.0",
     "pdfjs-dist": "^4.10.38",

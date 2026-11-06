@@ -78,7 +78,7 @@ export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; chil
 
   return (
     <div className="flex flex-col md:flex-row gap-8">
-      <aside className="md:w-56 shrink-0">
+      <aside data-print-hide className="md:w-56 shrink-0">
         <button
           type="button"
           onClick={() => setMobileOpen((v) => !v)}

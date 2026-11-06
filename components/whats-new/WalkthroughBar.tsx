@@ -64,6 +64,7 @@ export function WalkthroughBar() {
     return (
       <button
         type="button"
+        data-print-hide
         onClick={() => setWalkthrough({ ...state, collapsed: false })}
         className="fixed z-40 top-[4.75rem] right-3 rounded-full bg-gnome-green text-white text-xs font-semibold px-3 py-1.5 shadow-lg cursor-pointer hover:bg-gnome-green-light"
       >
@@ -74,6 +75,7 @@ export function WalkthroughBar() {
 
   return (
     <aside
+      data-print-hide
       aria-label="What's New walkthrough"
       className="fixed z-40 top-[4.75rem] inset-x-3 sm:inset-x-auto sm:right-4 sm:w-[24rem] rounded-lg border-2 border-gnome-green bg-parchment shadow-2xl"
     >

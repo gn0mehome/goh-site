@@ -25,7 +25,7 @@ export default async function AdminLayout({
     // Supabase not configured — dev mode
     return (
       <div className="min-h-[80vh]">
-        <div className="bg-gold/20 border-b border-gold px-4 py-2 text-center text-sm text-bark-brown">
+        <div data-print-hide className="bg-gold/20 border-b border-gold px-4 py-2 text-center text-sm text-bark-brown">
           Admin panel — Supabase not configured. Auth enforcement disabled for development.
         </div>
         <div className="mx-auto px-4 lg:px-8 py-6">

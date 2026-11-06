@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/Button";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { OVERVIEW_TABS } from "@/lib/admin-tabs";
 import { CompareWeeks } from "@/components/admin/CompareWeeks";
+import { ExportHeader, ExportMenu } from "@/components/admin/ExportMenu";
+import type { ExportSheet } from "@/lib/export-xlsx";
 import { bossDifficulty, DIFFICULTIES, DIFFICULTY_LABEL, type BossTiers, type Difficulty } from "@/lib/boss-difficulty";
 import type { CompetitionKind, CompetitionRow, PlayerResultTuple } from "@/lib/competition-insights";
-import { computeInsights, QUIET_AFTER, REGULAR_MIN, type CompetitionStat, type PlayerStat } from "@/lib/competition-insights-stats";
+import { computeComparison, computeInsights, difficultyOf, QUIET_AFTER, REGULAR_MIN, type CompetitionStat, type PlayerStat } from "@/lib/competition-insights-stats";
 
 const KIND_LABEL: Record<CompetitionKind, string> = { sotw: "Skill of the Week", botw: "Boss of the Week", other: "Other" };
 const KIND_SHORT: Record<CompetitionKind, string> = { sotw: "SOTW", botw: "BotW", other: "Other" };
@@ -127,6 +129,7 @@ export default function CompetitionInsightsPage() {
   const [showAllPlayers, setShowAllPlayers] = useState(false);
   const [showAllComps, setShowAllComps] = useState(false);
   const syncing = useRef(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/competition-insights");
@@ -224,10 +227,93 @@ export default function CompetitionInsightsPage() {
   const k = insights?.kpis;
   const latestFirst = [...(insights?.competitions ?? [])].reverse();
   const maxComps = insights?.players[0]?.comps ?? 1;
+  const filterLabel = `${kind === "both" ? "SOTW and BotW" : KIND_LABEL[kind]} · ${RANGES.find((r) => r.key === range)?.label}`;
+
+  // The Excel workbook: everything on the page, with the current filters, and no "show top 15" limits.
+  const buildSheets = (): ExportSheet[] => {
+    if (!data || !insights) return [];
+    const tiers = data.tiers ?? {};
+    const r1 = (n: number) => Math.round(n * 10) / 10;
+    const pctNum = (n: number | null) => (n == null ? null : Math.round(n * 1000) / 10);
+    const k = insights.kpis;
+    const tierOf = (c: CompetitionRow) => (c.kind === "botw" ? DIFFICULTY_LABEL[difficultyOf(c, tiers)] : "");
+    const compare = (mode: "type" | "difficulty") => {
+      const { groups, overlap } = computeComparison(data.competitions, data.results, from, mode, tiers);
+      const rows: (string | number | null)[][] = [
+        ["", ...groups.map((g) => g.label)],
+        ["Competitions", ...groups.map((g) => g.stats.length)],
+        ["Competitors per week (average)", ...groups.map((g) => r1(g.avgCompetitors))],
+        ["Competitors per week (lowest)", ...groups.map((g) => g.minCompetitors)],
+        ["Competitors per week (highest)", ...groups.map((g) => g.maxCompetitors)],
+        ["Of entrants took part (%, average)", ...groups.map((g) => pctNum(g.avgTurnout))],
+        ["Different competitors", ...groups.map((g) => g.uniqueCompetitors)],
+        ["First-timers per week (average)", ...groups.map((g) => r1(g.avgFirstTimers))],
+        ["Had competed before (% of competitors)", ...groups.map((g) => pctNum(g.returningShare))],
+      ];
+      if (overlap) rows.push([], ["Competed in both kinds", overlap.both], ["Only skilling weeks", overlap.sotwOnly], ["Only bossing weeks", overlap.botwOnly]);
+      return rows;
+    };
+    return [
+      {
+        name: "Summary",
+        rows: [
+          ["Gn0me Home · SOTW & BotW Insights"],
+          ["Showing", filterLabel],
+          ["Exported", new Date().toLocaleString()],
+          [],
+          ["Competitions", k.competitions],
+          ["Different competitors", k.uniqueCompetitors],
+          ["Competitors per competition (average)", r1(k.avgCompetitors)],
+          ["Of entrants took part (%, average)", pctNum(k.avgTurnout)],
+          [`Regulars (${REGULAR_MIN}+ competitions)`, k.regulars],
+          ["Busiest competition", k.busiest ? `${k.busiest.comp.title} (${k.busiest.active})` : ""],
+          [],
+          ["Someone counts as competing when they gained at least 1 XP or kill. Results from Wise Old Man."],
+        ],
+      },
+      {
+        name: "Competitions",
+        rows: [
+          ["Started", "Ended", "Competition", "Type", "Difficulty", "Competed", "Entered", "Took part (%)", "First-timers", "Returning", "1st", "1st gained", "2nd", "2nd gained", "3rd", "3rd gained", "Wise Old Man link"],
+          ...latestFirst.map((s) => [
+            s.comp.starts_at.slice(0, 10),
+            s.running ? "Running" : s.comp.ends_at.slice(0, 10),
+            s.comp.title,
+            KIND_SHORT[s.comp.kind],
+            tierOf(s.comp),
+            s.active,
+            s.comp.participant_count,
+            pctNum(s.turnout),
+            s.firstTimers,
+            s.returning,
+            ...[0, 1, 2].flatMap((i) => [s.top[i]?.name ?? "", s.top[i]?.gained ?? null]),
+            `https://wiseoldman.net/competitions/${s.comp.wom_id}`,
+          ]),
+        ],
+      },
+      {
+        name: "Competitors",
+        rows: [
+          ["#", "Player", "Competed", "Share of competitions (%)", "SOTW", "BotW", "Wins", "Top 3", "Best finish", "Last competed", "Last competition"],
+          ...sortedPlayers.map((p, i) => [i + 1, p.name, p.comps, pctNum(p.share), p.sotw, p.botw, p.wins, p.podiums, p.best, p.lastEnds.slice(0, 10), p.lastTitle]),
+        ],
+      },
+      {
+        name: "Quiet regulars",
+        rows: [
+          [`Competed in ${REGULAR_MIN}+ competitions but none of the latest ${QUIET_AFTER}`],
+          ["Player", "Competed", "Last competed", "Last competition"],
+          ...insights.quiet.map((p) => [p.name, p.comps, p.lastEnds.slice(0, 10), p.lastTitle]),
+        ],
+      },
+      { name: "Skilling vs bossing", rows: compare("type") },
+      { name: "Easy vs hard bosses", rows: compare("difficulty") },
+    ];
+  };
 
   return (
     <div className="space-y-6">
-      <div>
+      <div data-export-hide>
         <h1 className="font-display text-3xl text-gnome-green mb-4">Dashboard</h1>
         <AdminTabs tabs={OVERVIEW_TABS} />
         <p className="text-bark-brown-light max-w-3xl">
@@ -245,7 +331,7 @@ export default function CompetitionInsightsPage() {
       </div>
 
       {/* Filters and sync status, one row */}
-      <Card hover={false} className="flex flex-wrap items-center gap-x-6 gap-y-3">
+      <Card hover={false} className="flex flex-wrap items-center gap-x-6 gap-y-3" data-export-hide>
         <div className="flex flex-wrap gap-1" role="group" aria-label="Competition type">
           {(["both", "sotw", "botw"] as KindFilter[]).map((key) => (
             <Button key={key} size="sm" variant={kind === key ? "primary" : "ghost"} onClick={() => setKind(key)} aria-pressed={kind === key}>
@@ -271,6 +357,7 @@ export default function CompetitionInsightsPage() {
           <Button size="sm" variant="secondary" onClick={runSync} disabled={sync.running}>
             Refresh
           </Button>
+          {insights && insights.kpis.competitions > 0 && <ExportMenu title="SOTW & BotW Insights" captureRef={reportRef} sheets={buildSheets} />}
         </div>
       </Card>
 
@@ -278,7 +365,8 @@ export default function CompetitionInsightsPage() {
       {!data && !loadError && <p className="text-iron-grey">Loading…</p>}
 
       {insights && k && (
-        <>
+        <div ref={reportRef} className="space-y-6">
+          <ExportHeader title="SOTW & BotW Insights" detail={filterLabel} />
           {k.competitions === 0 ? (
             <Card hover={false} className="text-center py-10">
               <p className="text-bark-brown">No competitions in this range yet.</p>
@@ -314,7 +402,7 @@ export default function CompetitionInsightsPage() {
                       <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--color-iron-grey)" }} tickLine={false} axisLine={{ stroke: "var(--color-bark-brown-light)", strokeOpacity: 0.5 }} interval="preserveStartEnd" minTickGap={16} />
                       <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--color-iron-grey)" }} tickLine={false} axisLine={false} width={40} />
                       <Tooltip content={<CompetitorsTip />} cursor={{ fill: "var(--color-bark-brown-light)", fillOpacity: 0.12 }} />
-                      <Bar dataKey="active" name="Competitors" radius={[4, 4, 0, 0]} maxBarSize={36}>
+                      <Bar isAnimationActive={false} dataKey="active" name="Competitors" radius={[4, 4, 0, 0]} maxBarSize={36}>
                         {chartRows.map((r) => (
                           <Cell key={r.id} fill={KIND_COLOR[r.kind]} />
                         ))}
@@ -342,8 +430,8 @@ export default function CompetitionInsightsPage() {
                       <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--color-iron-grey)" }} tickLine={false} axisLine={{ stroke: "var(--color-bark-brown-light)", strokeOpacity: 0.5 }} interval="preserveStartEnd" minTickGap={16} />
                       <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--color-iron-grey)" }} tickLine={false} axisLine={false} width={40} />
                       <Tooltip content={<NewReturningTip />} cursor={{ fill: "var(--color-bark-brown-light)", fillOpacity: 0.12 }} />
-                      <Bar dataKey="returning" stackId="a" name="Returning" fill="var(--viz-returning)" stroke="var(--viz-surface)" strokeWidth={2} maxBarSize={36} />
-                      <Bar dataKey="firstTimers" stackId="a" name="First time" fill="var(--viz-new)" stroke="var(--viz-surface)" strokeWidth={2} radius={[4, 4, 0, 0]} maxBarSize={36} />
+                      <Bar isAnimationActive={false} dataKey="returning" stackId="a" name="Returning" fill="var(--viz-returning)" stroke="var(--viz-surface)" strokeWidth={2} maxBarSize={36} />
+                      <Bar isAnimationActive={false} dataKey="firstTimers" stackId="a" name="First time" fill="var(--viz-new)" stroke="var(--viz-surface)" strokeWidth={2} radius={[4, 4, 0, 0]} maxBarSize={36} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -399,7 +487,7 @@ export default function CompetitionInsightsPage() {
                     </table>
                   </div>
                   {sortedPlayers.length > 15 && (
-                    <button type="button" onClick={() => setShowAllPlayers((v) => !v)} className="mt-3 text-sm text-gnome-green hover:underline">
+                    <button type="button" data-export-hide onClick={() => setShowAllPlayers((v) => !v)} className="mt-3 text-sm text-gnome-green hover:underline">
                       {showAllPlayers ? "Show top 15" : `Show all ${sortedPlayers.length}`}
                     </button>
                   )}
@@ -503,14 +591,14 @@ export default function CompetitionInsightsPage() {
                   </table>
                 </div>
                 {latestFirst.length > 12 && (
-                  <button type="button" onClick={() => setShowAllComps((v) => !v)} className="mt-3 text-sm text-gnome-green hover:underline">
+                  <button type="button" data-export-hide onClick={() => setShowAllComps((v) => !v)} className="mt-3 text-sm text-gnome-green hover:underline">
                     {showAllComps ? "Show the latest 12" : `Show all ${latestFirst.length}`}
                   </button>
                 )}
               </Card>
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   );
