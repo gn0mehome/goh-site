@@ -2,6 +2,7 @@
 // the stored results, so filters re-run instantly in the browser.
 
 import type { CompetitionKind, CompetitionRow, PlayerResultTuple } from "@/lib/competition-insights";
+import { defaultDifficulty, DIFFICULTIES, DIFFICULTY_LABEL, type Difficulty } from "@/lib/boss-difficulty";
 
 export interface InsightFilters {
   kinds: CompetitionKind[];
@@ -137,4 +138,90 @@ export function computeInsights(all: CompetitionRow[], results: PlayerResultTupl
       busiest: competitions.reduce<CompetitionStat | null>((b, c) => (!b || c.active > b.active ? c : b), null),
     },
   };
+}
+
+/** A boss week's difficulty: the staff override, or the boss's built-in tier. */
+export const difficultyOf = (c: CompetitionRow): Difficulty => c.difficulty ?? defaultDifficulty(c.metric);
+
+export type CompareMode = "type" | "difficulty";
+
+export interface CompareGroup {
+  key: string;
+  label: string;
+  color: string;
+  stats: CompetitionStat[];
+  avgCompetitors: number;
+  minCompetitors: number;
+  maxCompetitors: number;
+  avgTurnout: number | null;
+  avgFirstTimers: number;
+  /** Of everyone who competed, the share who'd competed before. */
+  returningShare: number | null;
+  uniqueCompetitors: number;
+}
+
+export interface Comparison {
+  groups: CompareGroup[];
+  /** Skilling vs bossing only: how many people did one type, the other, or both. */
+  overlap: { sotwOnly: number; botwOnly: number; both: number } | null;
+}
+
+/**
+ * Side-by-side numbers for skilling vs bossing weeks, or for boss weeks by
+ * difficulty. Uses both competition types so "first time" means first SOTW
+ * or BotW of any kind.
+ */
+export function computeComparison(all: CompetitionRow[], results: PlayerResultTuple[], from: number | null, mode: CompareMode): Comparison {
+  const base = computeInsights(all, results, { kinds: ["sotw", "botw"], from }).competitions;
+  const players = new Map<number, Set<number>>();
+  for (const r of results) {
+    const set = players.get(r[0]) ?? new Set<number>();
+    set.add(r[1]);
+    players.set(r[0], set);
+  }
+
+  const defs: { key: string; label: string; color: string; match: (s: CompetitionStat) => boolean }[] =
+    mode === "type"
+      ? [
+          { key: "sotw", label: "Skilling weeks", color: "var(--viz-sotw)", match: (s) => s.comp.kind === "sotw" },
+          { key: "botw", label: "Bossing weeks", color: "var(--viz-botw)", match: (s) => s.comp.kind === "botw" },
+        ]
+      : DIFFICULTIES.map((d) => ({ key: d, label: `${DIFFICULTY_LABEL[d]} bosses`, color: `var(--viz-${d})`, match: (s: CompetitionStat) => s.comp.kind === "botw" && difficultyOf(s.comp) === d }));
+
+  const groups = defs.map(({ key, label, color, match }) => {
+    const stats = base.filter(match);
+    const n = stats.length;
+    const active = stats.map((s) => s.active);
+    const totalActive = active.reduce((a, b) => a + b, 0);
+    const withTurnout = stats.filter((s) => s.turnout != null);
+    const unique = new Set<number>();
+    for (const s of stats) for (const p of players.get(s.comp.wom_id) ?? []) unique.add(p);
+    return {
+      key,
+      label,
+      color,
+      stats,
+      avgCompetitors: n ? totalActive / n : 0,
+      minCompetitors: n ? Math.min(...active) : 0,
+      maxCompetitors: n ? Math.max(...active) : 0,
+      avgTurnout: withTurnout.length ? withTurnout.reduce((a, s) => a + (s.turnout ?? 0), 0) / withTurnout.length : null,
+      avgFirstTimers: n ? stats.reduce((a, s) => a + s.firstTimers, 0) / n : 0,
+      returningShare: totalActive ? stats.reduce((a, s) => a + s.returning, 0) / totalActive : null,
+      uniqueCompetitors: unique.size,
+    };
+  });
+
+  let overlap: Comparison["overlap"] = null;
+  if (mode === "type") {
+    const ids = (k: string) => {
+      const set = new Set<number>();
+      for (const s of groups.find((g) => g.key === k)?.stats ?? []) for (const p of players.get(s.comp.wom_id) ?? []) set.add(p);
+      return set;
+    };
+    const sotw = ids("sotw");
+    const botw = ids("botw");
+    const both = [...sotw].filter((p) => botw.has(p)).length;
+    overlap = { sotwOnly: sotw.size - both, botwOnly: botw.size - both, both };
+  }
+  return { groups, overlap };
 }

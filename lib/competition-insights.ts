@@ -5,6 +5,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { classifyMetric, getAllGroupCompetitions, getCompetitionDetailsOrThrow } from "@/lib/wom";
+import type { Difficulty } from "@/lib/boss-difficulty";
 
 export type CompetitionKind = "sotw" | "botw" | "other";
 
@@ -18,6 +19,8 @@ export interface CompetitionRow {
   ends_at: string;
   participant_count: number;
   active_count: number;
+  /** Staff override; null means the boss's built-in tier. */
+  difficulty: Difficulty | null;
   final: boolean;
   synced_at: string;
 }

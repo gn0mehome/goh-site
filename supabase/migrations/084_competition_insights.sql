@@ -15,6 +15,8 @@ create table if not exists competition_results (
   ends_at timestamptz not null,
   participant_count integer not null default 0,
   active_count integer not null default 0,
+  -- Staff override for a boss week's difficulty; null = the built-in tier for the boss.
+  difficulty text check (difficulty in ('easy', 'medium', 'hard')),
   final boolean not null default false,
   synced_at timestamptz not null default now()
 );

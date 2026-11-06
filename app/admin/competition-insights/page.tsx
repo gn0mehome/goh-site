@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { OVERVIEW_TABS } from "@/lib/admin-tabs";
+import { CompareWeeks } from "@/components/admin/CompareWeeks";
+import { defaultDifficulty, DIFFICULTIES, DIFFICULTY_LABEL, type Difficulty } from "@/lib/boss-difficulty";
 import type { CompetitionKind, CompetitionRow, PlayerResultTuple } from "@/lib/competition-insights";
 import { computeInsights, QUIET_AFTER, REGULAR_MIN, type CompetitionStat, type PlayerStat } from "@/lib/competition-insights-stats";
 
@@ -114,7 +116,8 @@ function NewReturningTip({ active, payload }: { active?: boolean; payload?: { pa
 type SortKey = "comps" | "wins" | "podiums" | "best" | "lastEnds" | "name";
 
 export default function CompetitionInsightsPage() {
-  const [data, setData] = useState<{ competitions: CompetitionRow[]; results: PlayerResultTuple[] } | null>(null);
+  const [data, setData] = useState<{ competitions: CompetitionRow[]; results: PlayerResultTuple[]; canEdit?: boolean } | null>(null);
+  const [tierError, setTierError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [sync, setSync] = useState<{ running: boolean; pending: number; error: string | null; done: number }>({ running: false, pending: 0, error: null, done: 0 });
   const [kind, setKind] = useState<KindFilter>("both");
@@ -157,17 +160,32 @@ export default function CompetitionInsightsPage() {
     load().then(runSync);
   }, [load, runSync]);
 
+  const from = useMemo(() => {
+    const months = RANGES.find((r) => r.key === range)?.months ?? null;
+    if (months == null) return null;
+    const d = new Date();
+    d.setMonth(d.getMonth() - months);
+    return d.getTime();
+  }, [range]);
+
   const insights = useMemo(() => {
     if (!data) return null;
-    const months = RANGES.find((r) => r.key === range)?.months ?? null;
-    const from = months == null ? null : (() => {
-      const d = new Date();
-      d.setMonth(d.getMonth() - months);
-      return d.getTime();
-    })();
     const kinds: CompetitionKind[] = kind === "both" ? ["sotw", "botw"] : [kind];
     return computeInsights(data.competitions, data.results, { kinds, from });
-  }, [data, kind, range]);
+  }, [data, kind, from]);
+
+  // A boss week's tier: save, then update the page without reloading everything.
+  const setTier = async (womId: number, difficulty: Difficulty | null) => {
+    setTierError(null);
+    const res = await fetch("/api/admin/competition-insights", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wom_id: womId, difficulty }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) return setTierError(json.error ?? "Couldn't save the difficulty.");
+    setData((d) => (d ? { ...d, competitions: d.competitions.map((c) => (c.wom_id === womId ? { ...c, difficulty } : c)) } : d));
+  };
 
   const chartRows: ChartRow[] = useMemo(
     () =>
@@ -306,6 +324,8 @@ export default function CompetitionInsightsPage() {
                 </div>
               </Card>
 
+              {data && <CompareWeeks competitions={data.competitions} results={data.results} from={from} />}
+
               <Card hover={false}>
                 <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
                   <h2 className="font-display text-xl text-bark-brown">Returning and first-time competitors</h2>
@@ -409,7 +429,9 @@ export default function CompetitionInsightsPage() {
               </div>
 
               <Card hover={false} className="overflow-hidden">
-                <h2 className="font-display text-xl text-bark-brown mb-3">Every competition</h2>
+                <h2 className="font-display text-xl text-bark-brown mb-1">Every competition</h2>
+                <p className="text-xs text-iron-grey mb-3">{data?.canEdit ? "Boss weeks show their difficulty tier; change it if the built-in one doesn't fit." : "Boss weeks show their difficulty tier."}</p>
+                {tierError && <p className="text-sm text-red-accent mb-2">{tierError}</p>}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[760px]">
                     <thead>
@@ -431,8 +453,26 @@ export default function CompetitionInsightsPage() {
                               <a href={`https://wiseoldman.net/competitions/${s.comp.wom_id}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-bark-brown hover:text-gnome-green">
                                 {s.comp.title}
                               </a>
-                              <div>
+                              <div className="flex flex-wrap items-center gap-2 mt-0.5">
                                 <KindChip kind={s.comp.kind} />
+                                {s.comp.kind === "botw" &&
+                                  (data?.canEdit ? (
+                                    <select
+                                      value={s.comp.difficulty ?? ""}
+                                      onChange={(e) => setTier(s.comp.wom_id, (e.target.value || null) as Difficulty | null)}
+                                      className="text-[11px] rounded border border-bark-brown-light/60 bg-parchment px-1 py-0.5 text-bark-brown cursor-pointer"
+                                      aria-label={`Difficulty for ${s.comp.title}`}
+                                    >
+                                      <option value="">{DIFFICULTY_LABEL[defaultDifficulty(s.comp.metric)]} (built-in)</option>
+                                      {DIFFICULTIES.map((d) => (
+                                        <option key={d} value={d}>
+                                          {DIFFICULTY_LABEL[d]}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    <span className="text-[11px] text-iron-grey">{DIFFICULTY_LABEL[s.comp.difficulty ?? defaultDifficulty(s.comp.metric)]}</span>
+                                  ))}
                               </div>
                             </td>
                             <td className="py-2 px-2 text-right font-stats">
