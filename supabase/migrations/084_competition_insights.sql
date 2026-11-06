@@ -15,8 +15,8 @@ create table if not exists competition_results (
   ends_at timestamptz not null,
   participant_count integer not null default 0,
   active_count integer not null default 0,
-  -- Staff override for a boss week's difficulty; null = the built-in tier for the boss.
-  difficulty text check (difficulty in ('easy', 'medium', 'hard')),
+  -- Staff override for one boss week; null = the boss's tier from boss_difficulties.
+  difficulty text check (difficulty in ('easy', 'hard')),
   final boolean not null default false,
   synced_at timestamptz not null default now()
 );
@@ -35,3 +35,13 @@ create index if not exists competition_result_players_player_idx on competition_
 
 alter table competition_results enable row level security;
 alter table competition_result_players enable row level security;
+
+-- Easy / Hard tier for each boss and raid (WOM metric), set on Admin ›
+-- Settings › Boss Difficulty. Bosses not listed use the site's suggestion.
+create table if not exists boss_difficulties (
+  metric text primary key,
+  difficulty text not null check (difficulty in ('easy', 'hard')),
+  updated_by text,
+  updated_at timestamptz not null default now()
+);
+alter table boss_difficulties enable row level security;

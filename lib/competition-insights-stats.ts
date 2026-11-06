@@ -2,7 +2,7 @@
 // the stored results, so filters re-run instantly in the browser.
 
 import type { CompetitionKind, CompetitionRow, PlayerResultTuple } from "@/lib/competition-insights";
-import { defaultDifficulty, DIFFICULTIES, DIFFICULTY_LABEL, type Difficulty } from "@/lib/boss-difficulty";
+import { bossDifficulty, DIFFICULTIES, DIFFICULTY_LABEL, type BossTiers, type Difficulty } from "@/lib/boss-difficulty";
 
 export interface InsightFilters {
   kinds: CompetitionKind[];
@@ -140,8 +140,8 @@ export function computeInsights(all: CompetitionRow[], results: PlayerResultTupl
   };
 }
 
-/** A boss week's difficulty: the staff override, or the boss's built-in tier. */
-export const difficultyOf = (c: CompetitionRow): Difficulty => c.difficulty ?? defaultDifficulty(c.metric);
+/** A boss week's difficulty: the week's own override, or the boss's tier. */
+export const difficultyOf = (c: CompetitionRow, tiers: BossTiers): Difficulty => c.difficulty ?? bossDifficulty(c.metric, tiers);
 
 export type CompareMode = "type" | "difficulty";
 
@@ -167,11 +167,11 @@ export interface Comparison {
 }
 
 /**
- * Side-by-side numbers for skilling vs bossing weeks, or for boss weeks by
- * difficulty. Uses both competition types so "first time" means first SOTW
+ * Side-by-side numbers for skilling vs bossing weeks, or for easy vs hard
+ * boss weeks. Uses both competition types so "first time" means first SOTW
  * or BotW of any kind.
  */
-export function computeComparison(all: CompetitionRow[], results: PlayerResultTuple[], from: number | null, mode: CompareMode): Comparison {
+export function computeComparison(all: CompetitionRow[], results: PlayerResultTuple[], from: number | null, mode: CompareMode, tiers: BossTiers): Comparison {
   const base = computeInsights(all, results, { kinds: ["sotw", "botw"], from }).competitions;
   const players = new Map<number, Set<number>>();
   for (const r of results) {
@@ -186,7 +186,7 @@ export function computeComparison(all: CompetitionRow[], results: PlayerResultTu
           { key: "sotw", label: "Skilling weeks", color: "var(--viz-sotw)", match: (s) => s.comp.kind === "sotw" },
           { key: "botw", label: "Bossing weeks", color: "var(--viz-botw)", match: (s) => s.comp.kind === "botw" },
         ]
-      : DIFFICULTIES.map((d) => ({ key: d, label: `${DIFFICULTY_LABEL[d]} bosses`, color: `var(--viz-${d})`, match: (s: CompetitionStat) => s.comp.kind === "botw" && difficultyOf(s.comp) === d }));
+      : DIFFICULTIES.map((d) => ({ key: d, label: `${DIFFICULTY_LABEL[d]} bosses`, color: `var(--viz-${d})`, match: (s: CompetitionStat) => s.comp.kind === "botw" && difficultyOf(s.comp, tiers) === d }));
 
   const groups = defs.map(({ key, label, color, match }) => {
     const stats = base.filter(match);

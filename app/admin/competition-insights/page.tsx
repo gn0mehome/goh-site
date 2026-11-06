@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { OVERVIEW_TABS } from "@/lib/admin-tabs";
 import { CompareWeeks } from "@/components/admin/CompareWeeks";
-import { defaultDifficulty, DIFFICULTIES, DIFFICULTY_LABEL, type Difficulty } from "@/lib/boss-difficulty";
+import { bossDifficulty, DIFFICULTIES, DIFFICULTY_LABEL, type BossTiers, type Difficulty } from "@/lib/boss-difficulty";
 import type { CompetitionKind, CompetitionRow, PlayerResultTuple } from "@/lib/competition-insights";
 import { computeInsights, QUIET_AFTER, REGULAR_MIN, type CompetitionStat, type PlayerStat } from "@/lib/competition-insights-stats";
 
@@ -116,7 +116,7 @@ function NewReturningTip({ active, payload }: { active?: boolean; payload?: { pa
 type SortKey = "comps" | "wins" | "podiums" | "best" | "lastEnds" | "name";
 
 export default function CompetitionInsightsPage() {
-  const [data, setData] = useState<{ competitions: CompetitionRow[]; results: PlayerResultTuple[]; canEdit?: boolean } | null>(null);
+  const [data, setData] = useState<{ competitions: CompetitionRow[]; results: PlayerResultTuple[]; tiers?: BossTiers; canEdit?: boolean } | null>(null);
   const [tierError, setTierError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [sync, setSync] = useState<{ running: boolean; pending: number; error: string | null; done: number }>({ running: false, pending: 0, error: null, done: 0 });
@@ -324,7 +324,7 @@ export default function CompetitionInsightsPage() {
                 </div>
               </Card>
 
-              {data && <CompareWeeks competitions={data.competitions} results={data.results} from={from} />}
+              {data && <CompareWeeks competitions={data.competitions} results={data.results} from={from} tiers={data.tiers ?? {}} />}
 
               <Card hover={false}>
                 <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
@@ -430,7 +430,7 @@ export default function CompetitionInsightsPage() {
 
               <Card hover={false} className="overflow-hidden">
                 <h2 className="font-display text-xl text-bark-brown mb-1">Every competition</h2>
-                <p className="text-xs text-iron-grey mb-3">{data?.canEdit ? "Boss weeks show their difficulty tier; change it if the built-in one doesn't fit." : "Boss weeks show their difficulty tier."}</p>
+                <p className="text-xs text-iron-grey mb-3">{data?.canEdit ? "Boss weeks show whether they were an easy or hard week. Change one here if that week was different from the boss's usual setting." : "Boss weeks show whether they were an easy or hard week."}</p>
                 {tierError && <p className="text-sm text-red-accent mb-2">{tierError}</p>}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[760px]">
@@ -463,7 +463,7 @@ export default function CompetitionInsightsPage() {
                                       className="text-[11px] rounded border border-bark-brown-light/60 bg-parchment px-1 py-0.5 text-bark-brown cursor-pointer"
                                       aria-label={`Difficulty for ${s.comp.title}`}
                                     >
-                                      <option value="">{DIFFICULTY_LABEL[defaultDifficulty(s.comp.metric)]} (built-in)</option>
+                                      <option value="">{DIFFICULTY_LABEL[bossDifficulty(s.comp.metric, data.tiers ?? {})]} (boss setting)</option>
                                       {DIFFICULTIES.map((d) => (
                                         <option key={d} value={d}>
                                           {DIFFICULTY_LABEL[d]}
@@ -471,7 +471,7 @@ export default function CompetitionInsightsPage() {
                                       ))}
                                     </select>
                                   ) : (
-                                    <span className="text-[11px] text-iron-grey">{DIFFICULTY_LABEL[s.comp.difficulty ?? defaultDifficulty(s.comp.metric)]}</span>
+                                    <span className="text-[11px] text-iron-grey">{DIFFICULTY_LABEL[s.comp.difficulty ?? bossDifficulty(s.comp.metric, data?.tiers ?? {})]}</span>
                                   ))}
                               </div>
                             </td>

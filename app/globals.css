@@ -69,7 +69,6 @@ h1, h2, h3 {
   --viz-returning: #3d7a2a;
   --viz-new: #8a5cc2;
   --viz-easy: #cc7a3d;
-  --viz-medium: #a94b1a;
   --viz-hard: #6e280a;
   --viz-surface: color-mix(in srgb, var(--color-parchment) 90%, var(--color-bark-brown-light) 10%);
 }
@@ -79,7 +78,6 @@ h1, h2, h3 {
   --viz-returning: #5aa042;
   --viz-new: #a27ad6;
   --viz-easy: #f0b98c;
-  --viz-medium: #d96a30;
   --viz-hard: #a8471c;
   --viz-surface: #1e2d40;
 }

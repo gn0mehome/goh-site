@@ -59,6 +59,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/voice-rooms", label: "Voice Rooms", group: "Settings", permission: "manage_settings" },
   { href: "/admin/clan-feed", label: "Clan Feed (DropTracker)", group: "Settings", permission: "manage_settings" },
   { href: "/admin/rank-labels", label: "Rank Labels", group: "Settings", permission: "manage_settings" },
+  { href: "/admin/boss-difficulty", label: "Boss Difficulty", group: "Settings", permission: "manage_competitions" },
   { href: "/admin/prize-defaults", label: "Prize & DM Defaults", group: "Settings", permission: "manage_payouts" },
   { href: "/admin/permissions", label: "Roles & Access", group: "Settings", permission: ["manage_permissions", "manage_sections"], alsoActiveOn: ["/admin/sections"] },
   { href: "/admin/banned-ips", label: "Banned IPs", group: "Settings", permission: "manage_banned_ips" },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
 import { loadCompetitionResults, syncCompetitionResults } from "@/lib/competition-insights";
+import { loadBossTiers } from "@/lib/boss-difficulty-server";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,11 +18,12 @@ export async function GET() {
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
   const { allowed: canEdit } = await checkPermission("manage_competitions");
-  return NextResponse.json({ ...(await loadCompetitionResults(supabase)), canEdit });
+  const [results, tiers] = await Promise.all([loadCompetitionResults(supabase), loadBossTiers(supabase)]);
+  return NextResponse.json({ ...results, tiers, canEdit });
 }
 
-// PATCH { wom_id, difficulty } - override a boss week's difficulty ("easy" |
-// "medium" | "hard", or null to go back to the boss's built-in tier).
+// PATCH { wom_id, difficulty } - override one boss week ("easy" | "hard", or
+// null to go back to the boss's tier from Settings › Boss Difficulty).
 export async function PATCH(request: NextRequest) {
   const { allowed } = await checkPermission("manage_competitions");
   if (!allowed) return NextResponse.json({ error: "Changing difficulty needs the Manage Competitions permission." }, { status: 403 });
@@ -29,8 +31,8 @@ export async function PATCH(request: NextRequest) {
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
   const body = await request.json().catch(() => ({}));
   const womId = Number(body.wom_id);
-  const difficulty = body.difficulty === null ? null : ["easy", "medium", "hard"].includes(body.difficulty) ? body.difficulty : undefined;
-  if (!Number.isInteger(womId) || difficulty === undefined) return NextResponse.json({ error: "Pick Easy, Medium or Hard." }, { status: 400 });
+  const difficulty = body.difficulty === null ? null : ["easy", "hard"].includes(body.difficulty) ? body.difficulty : undefined;
+  if (!Number.isInteger(womId) || difficulty === undefined) return NextResponse.json({ error: "Pick Easy or Hard." }, { status: 400 });
   const { error } = await supabase.from("competition_results").update({ difficulty }).eq("wom_id", womId);
   if (error) return NextResponse.json({ error: "Couldn't save the difficulty." }, { status: 500 });
   return NextResponse.json({ saved: true });

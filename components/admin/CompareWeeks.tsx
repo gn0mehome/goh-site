@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import type { CompetitionRow, PlayerResultTuple } from "@/lib/competition-insights";
 import { computeComparison, type CompareGroup, type CompareMode } from "@/lib/competition-insights-stats";
+import type { BossTiers } from "@/lib/boss-difficulty";
+import Link from "next/link";
 
 const pct = (n: number | null) => (n == null ? "–" : `${Math.round(n * 100)}%`);
 const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -88,9 +90,9 @@ function Strip({ groups }: { groups: CompareGroup[] }) {
  * Side-by-side comparison of skilling vs bossing weeks, or boss weeks by
  * difficulty, over the dashboard's date range.
  */
-export function CompareWeeks({ competitions, results, from }: { competitions: CompetitionRow[]; results: PlayerResultTuple[]; from: number | null }) {
+export function CompareWeeks({ competitions, results, from, tiers }: { competitions: CompetitionRow[]; results: PlayerResultTuple[]; from: number | null; tiers: BossTiers }) {
   const [mode, setMode] = useState<CompareMode>("type");
-  const { groups, overlap } = useMemo(() => computeComparison(competitions, results, from, mode), [competitions, results, from, mode]);
+  const { groups, overlap } = useMemo(() => computeComparison(competitions, results, from, mode, tiers), [competitions, results, from, mode, tiers]);
   const shown = groups.filter((g) => g.stats.length > 0);
 
   // Bold the highest value in each row (when there's something to compare).
@@ -128,13 +130,22 @@ export function CompareWeeks({ competitions, results, from }: { competitions: Co
             Skilling vs bossing
           </Button>
           <Button size="sm" variant={mode === "difficulty" ? "primary" : "ghost"} onClick={() => setMode("difficulty")} aria-pressed={mode === "difficulty"}>
-            Boss difficulty
+            Easy vs hard bosses
           </Button>
         </div>
       </div>
       <p className="text-xs text-iron-grey mb-4">
         Uses the date range above, whatever the SOTW/BotW filter says.
-        {mode === "difficulty" && " Each boss has a built-in tier (a rough guide); change a week's tier under Every competition."}
+        {mode === "difficulty" && (
+          <>
+            {" "}
+            Which bosses count as easy or hard is set in{" "}
+            <Link href="/admin/boss-difficulty" className="text-gnome-green hover:underline">
+              Settings › Boss Difficulty
+            </Link>
+            ; a single week can be changed under Every competition.
+          </>
+        )}
       </p>
 
       {shown.length === 0 ? (
