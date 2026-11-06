@@ -65,7 +65,7 @@ export function WeeklyVotePolls({ refreshKey }: { refreshKey: number }) {
   };
 
   return (
-    <Card hover={false} className="space-y-4">
+    <Card hover={false} className="space-y-4 mt-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-xl text-bark-brown">When the voting poll closes</h2>
         <Button size="sm" variant="ghost" disabled={busy === "check"} onClick={() => act("check", { action: "check" }, "Checked.")}>
