@@ -269,3 +269,43 @@ h1, h2, h3 {
 .dark .recharts-tooltip-label {
   color: #E8D5A8;
 }
+
+/* Dashboard exports (components/admin/ExportMenu.tsx): the title bar only
+   shows in pictures and printouts; filters and buttons are left out. */
+[data-export-only] {
+  display: none;
+}
+.exporting [data-export-only] {
+  display: block;
+}
+.exporting span[data-export-only] {
+  display: inline;
+}
+.exporting [data-export-hide] {
+  display: none !important;
+}
+.exporting [data-picture-hide] {
+  display: none !important;
+}
+@media print {
+  [data-export-only] {
+    display: block;
+  }
+  span[data-export-only] {
+    display: inline;
+  }
+  [data-export-hide],
+  [data-print-hide] {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  .card-wood {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  @page {
+    margin: 12mm;
+  }
+}

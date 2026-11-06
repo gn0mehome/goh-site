@@ -36,6 +36,25 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 6, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-06-dashboard-exports",
+    date: "2026-11-06",
+    kind: "new",
+    audience: "admin",
+    title: "Export the admin dashboards as a picture, spreadsheet or PDF",
+    summary:
+      "Clan Overview, Player Activity and SOTW & BotW now have an Export button. Picture (PNG) saves the dashboard as an image with a Gn0me Home title bar, ready to post in Discord. Spreadsheet (Excel) saves every table as its own sheet with the filters you picked, including the full lists that the page shortens. Print / Save as PDF gives a clean printout without the site menu, sidebar or filters. Pick Save as PDF as the printer to get a file.",
+    tryIt: [
+      "Open the admin Dashboard and pick a tab (Clan Overview, Player Activity or SOTW & BotW).",
+      "Set the filters the way you want them, then press Export at the top right.",
+      "Pick Picture, Spreadsheet or Print / Save as PDF.",
+    ],
+    links: [
+      { label: "Dashboard › SOTW & BotW", href: "/admin/competition-insights" },
+      { label: "Dashboard › Player Activity", href: "/admin/activity" },
+      { label: "Dashboard › Clan Overview", href: "/admin" },
+    ],
+  },
+  {
     id: "2026-11-06-boss-difficulty-settings",
     date: "2026-11-06",
     kind: "new",

@@ -160,7 +160,7 @@ export function Navbar({ initialHiddenKeys }: NavbarProps) {
   };
 
   return (
-    <nav className="bg-bark-brown border-b-2 border-bark-brown-light shadow-lg sticky top-0 z-50">
+    <nav data-print-hide className="bg-bark-brown border-b-2 border-bark-brown-light shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo / Clan Name */}

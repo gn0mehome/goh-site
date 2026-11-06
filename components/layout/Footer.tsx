@@ -3,7 +3,7 @@ import { CLAN_NAME, CLAN_CHAT, WOM_GROUP_URL, DISCORD_INVITE } from "@/lib/const
 
 export function Footer() {
   return (
-    <footer className="bg-bark-brown border-t-2 border-bark-brown-light mt-auto">
+    <footer data-print-hide className="bg-bark-brown border-t-2 border-bark-brown-light mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Clan Info */}

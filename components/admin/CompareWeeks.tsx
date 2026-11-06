@@ -124,8 +124,14 @@ export function CompareWeeks({ competitions, results, from, tiers }: { competiti
   return (
     <Card hover={false}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
-        <h2 className="font-display text-xl text-bark-brown">Compare weeks</h2>
-        <div className="flex gap-1" role="group" aria-label="What to compare">
+        <h2 className="font-display text-xl text-bark-brown">
+          Compare weeks
+          <span data-export-only className="inline text-base text-bark-brown-light">
+            {" "}
+            · {mode === "type" ? "Skilling vs bossing" : "Easy vs hard bosses"}
+          </span>
+        </h2>
+        <div className="flex gap-1" role="group" aria-label="What to compare" data-export-hide>
           <Button size="sm" variant={mode === "type" ? "primary" : "ghost"} onClick={() => setMode("type")} aria-pressed={mode === "type"}>
             Skilling vs bossing
           </Button>

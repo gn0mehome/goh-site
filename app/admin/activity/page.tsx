@@ -2,7 +2,9 @@
 
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { OVERVIEW_TABS } from "@/lib/admin-tabs";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { ExportHeader, ExportMenu } from "@/components/admin/ExportMenu";
+import type { ExportSheet } from "@/lib/export-xlsx";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -94,6 +96,7 @@ export default function AdminActivityPage() {
   const [topBosses, setTopBosses] = useState<MetricRanking[]>([]);
   const [gainsAsOf, setGainsAsOf] = useState<string | null>(null);
   const [capturing, setCapturing] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const loadSkillsBosses = useCallback(async (activePreset: Preset, start: string, end: string) => {
     const params = new URLSearchParams();
@@ -264,9 +267,61 @@ export default function AdminActivityPage() {
 
   const sortArrow = (key: SortKey) => (sortKey === key ? (sortDir === "asc" ? " ▲" : " ▼") : "");
 
+  const rangeLabel =
+    preset === "custom" ? `${customStart || "the start"} to ${customEnd || "today"}` : PRESETS.find((p) => p.key === preset)?.label ?? "";
+
+  // The Excel workbook: the summary, the two rankings and the whole (filtered, sorted) roster.
+  const buildSheets = (): ExportSheet[] => [
+    {
+      name: "Summary",
+      rows: [
+        ["Gn0me Home · Player Activity"],
+        ["Range", rangeLabel],
+        ["Exported", new Date().toLocaleString()],
+        [],
+        ["Clan members", summary?.totalMembers ?? null],
+        ["Active", summary?.activeCount ?? null],
+        ["Gone quiet", summary?.inactiveCount ?? null],
+        ["New members", summary?.newMembers ?? null],
+        ["RSN-linked", summary?.linkedCount ?? null],
+        ["Unique event attendees", summary?.uniqueAttendees ?? null],
+        [],
+        ["Skillers", summary?.skillerCount ?? null],
+        ["Bossers", summary?.bosserCount ?? null],
+        ["Balanced", summary?.balancedCount ?? null],
+        ["Inactive", summary?.inactiveCount ?? null],
+      ],
+    },
+    { name: "Top skills", rows: [["Skill", "XP gained"], ...topSkills.map((m) => [m.name, m.totalGained])] },
+    { name: "Top bosses", rows: [["Boss", "Kills gained"], ...topBosses.map((m) => [m.name, m.totalGained])] },
+    {
+      name: "Roster",
+      rows: [
+        ["RSN", "Linked", "Discord", "Role", "Joined the WOM group", "New", "Days since active", "EHP gained", "EHB gained", "Focus", "Events attended"],
+        ...sortedMembers.map((m) => [
+          m.displayName,
+          m.linked ? "Yes" : "No",
+          m.discordUsername ?? "",
+          m.clanRole,
+          m.registeredAt.slice(0, 10),
+          m.isNew ? "Yes" : "",
+          m.daysSinceActive,
+          Math.round(m.ehpGained * 10) / 10,
+          Math.round(m.ehbGained * 10) / 10,
+          FOCUS_LABELS[m.focus],
+          m.eventsAttended,
+        ]),
+      ],
+    },
+  ];
+
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-4">Dashboard</h1>
+      <div data-export-hide>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <h1 className="font-display text-3xl text-gnome-green">Dashboard</h1>
+        {!loading && summary && <ExportMenu title="Player Activity" captureRef={reportRef} sheets={buildSheets} />}
+      </div>
       <AdminTabs tabs={OVERVIEW_TABS} />
       <p className="text-bark-brown-light mb-6">
         Retention, engagement, and skilling-vs-bossing activity for the clan roster. For clan growth over
@@ -274,8 +329,10 @@ export default function AdminActivityPage() {
         full event attendance rankings see the <Link href="/leaderboard" className="text-gnome-green hover:underline">Leaderboard</Link>.
       </p>
 
+      </div>
+
       {/* Range filters */}
-      <Card hover={false} className="mb-6">
+      <Card hover={false} className="mb-6" data-export-hide>
         <div className="flex flex-wrap items-center gap-3 mb-3">
           {PRESETS.map((p) => (
             <Button key={p.key} size="sm" variant={preset === p.key ? "primary" : "ghost"} onClick={() => selectPreset(p.key)}>
@@ -309,7 +366,8 @@ export default function AdminActivityPage() {
           <div className="w-8 h-8 border-4 border-parchment-dark border-t-gnome-green rounded-full animate-spin" />
         </div>
       ) : (
-        <>
+        <div ref={reportRef}>
+          <ExportHeader title="Player Activity" detail={rangeLabel} />
           {summary && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
               <StatCard label="Clan Members" value={summary.totalMembers} />
@@ -335,8 +393,8 @@ export default function AdminActivityPage() {
                     <YAxis tick={{ fontSize: 12 }} tickFormatter={compact} width={44} />
                     <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
                     <Legend wrapperStyle={{ fontSize: "0.8rem" }} />
-                    <Bar dataKey="ehpGained" name="EHP Gained" fill="var(--color-gnome-green)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="ehbGained" name="EHB Gained" fill="#8B1A1A" radius={[4, 4, 0, 0]} />
+                    <Bar isAnimationActive={false} dataKey="ehpGained" name="EHP Gained" fill="var(--color-gnome-green)" radius={[4, 4, 0, 0]} />
+                    <Bar isAnimationActive={false} dataKey="ehbGained" name="EHB Gained" fill="#8B1A1A" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -354,7 +412,7 @@ export default function AdminActivityPage() {
                     contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
                     labelFormatter={(k) => FOCUS_LABELS[k as Focus] ?? k}
                   />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                  <Bar isAnimationActive={false} dataKey="count" radius={[4, 4, 0, 0]}>
                     {focusData.map((d) => (
                       <Cell key={d.key} fill={FOCUS_COLORS[d.key]} />
                     ))}
@@ -381,7 +439,7 @@ export default function AdminActivityPage() {
                       contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
                       formatter={(v) => [Number(v).toLocaleString(), "XP Gained"]}
                     />
-                    <Bar dataKey="totalGained" name="XP Gained" fill="var(--color-gnome-green)" radius={[0, 4, 4, 0]} />
+                    <Bar isAnimationActive={false} dataKey="totalGained" name="XP Gained" fill="var(--color-gnome-green)" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -402,7 +460,7 @@ export default function AdminActivityPage() {
                       contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
                       formatter={(v) => [Number(v).toLocaleString(), "KC Gained"]}
                     />
-                    <Bar dataKey="totalGained" name="KC Gained" fill="#8B1A1A" radius={[0, 4, 4, 0]} />
+                    <Bar isAnimationActive={false} dataKey="totalGained" name="KC Gained" fill="#8B1A1A" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -414,18 +472,18 @@ export default function AdminActivityPage() {
             </p>
           )}
 
-          {/* Full roster table */}
-          <Card hover={false}>
+          {/* Full roster table: in printouts, but too long for a picture (it's in the Excel export) */}
+          <Card hover={false} data-picture-hide>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-lg text-bark-brown">
                 Full Roster ({sortedMembers.length}{sortedMembers.length !== members.length ? ` of ${members.length}` : ""})
               </h3>
-              <Button variant="ghost" size="sm" onClick={captureNow} disabled={capturing}>
+              <Button variant="ghost" size="sm" onClick={captureNow} disabled={capturing} data-export-hide>
                 {capturing ? "Updating..." : "🔄 Update"}
               </Button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-4 text-sm">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-4 text-sm" data-export-hide>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-iron-grey uppercase tracking-wide">Linked</span>
                 {ALL_LINKED_FILTERS.map((key) => (
@@ -517,7 +575,7 @@ export default function AdminActivityPage() {
               </table>
             </div>
           </Card>
-        </>
+        </div>
       )}
     </div>
   );
