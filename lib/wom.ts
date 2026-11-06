@@ -386,6 +386,30 @@ export async function createWomCompetition(payload: {
   return data as CreateCompetitionResult;
 }
 
+/**
+ * Runs a change to a competition with the code WOM wants: competitions linked
+ * to the clan group are checked against the group's code, others against
+ * their own. If WOM says the first code is wrong, the other is tried.
+ */
+export async function withCompetitionCode<T>(
+  row: { verification_code: string; group_linked?: boolean | null },
+  run: (code: string) => Promise<T>
+): Promise<T> {
+  const group = process.env.WOM_GROUP_VERIFICATION_CODE;
+  const order = row.group_linked ? [group, row.verification_code] : [row.verification_code, group];
+  const codes = [...new Set(order.filter((c): c is string => !!c))];
+  let lastError: unknown = new Error("No verification code for this competition.");
+  for (const code of codes) {
+    try {
+      return await run(code);
+    } catch (err) {
+      lastError = err;
+      if (!/verification code/i.test(err instanceof Error ? err.message : String(err))) throw err;
+    }
+  }
+  throw lastError;
+}
+
 /** Deletes a WOM competition. Requires that competition's own verification code, or its host group's. */
 export async function deleteWomCompetition(womId: number, verificationCode: string) {
   return womClient.competitions.deleteCompetition(womId, verificationCode);
