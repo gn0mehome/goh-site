@@ -61,6 +61,27 @@ h1, h2, h3 {
   --color-text-primary: #E8D5A8;
 }
 
+/* Chart series colours (validated for colour-blind separation on the card
+   surface in each mode). Used by the competition insights dashboard. */
+:root {
+  --viz-sotw: #2a6fc4;
+  --viz-botw: #b54f1b;
+  --viz-returning: #3d7a2a;
+  --viz-new: #8a5cc2;
+  --viz-easy: #cc7a3d;
+  --viz-hard: #6e280a;
+  --viz-surface: color-mix(in srgb, var(--color-parchment) 90%, var(--color-bark-brown-light) 10%);
+}
+.dark {
+  --viz-sotw: #4a87d6;
+  --viz-botw: #d96a30;
+  --viz-returning: #5aa042;
+  --viz-new: #a27ad6;
+  --viz-easy: #f0b98c;
+  --viz-hard: #a8471c;
+  --viz-surface: #1e2d40;
+}
+
 .dark body {
   background-color: #1a2332;
   color: #E8D5A8;

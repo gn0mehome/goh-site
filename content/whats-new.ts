@@ -34,6 +34,41 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── November 6, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-11-06-boss-difficulty-settings",
+    date: "2026-11-06",
+    kind: "new",
+    audience: "admin",
+    title: "Boss Difficulty: mark bosses and raids as easy or hard",
+    summary:
+      "A new settings page lists every boss and raid with an Easy / Hard switch, for the Boss of the Week rotation. Until you save it, each boss shows a suggestion. The SOTW & BotW Dashboard tab uses these to compare easy weeks with hard weeks. If one week was different from usual, change just that week from its dropdown under Every competition on the Dashboard tab.",
+    tryIt: [
+      "Go to Admin › Settings › Boss Difficulty.",
+      "Search for a boss or filter by Easy, Hard or Not saved yet, and flip any that are wrong.",
+      "Press Save, then open Dashboard › SOTW & BotW and pick Easy vs hard bosses under Compare weeks.",
+    ],
+    links: [
+      { label: "Boss Difficulty", href: "/admin/boss-difficulty" },
+      { label: "Dashboard › SOTW & BotW", href: "/admin/competition-insights" },
+    ],
+  },
+  {
+    id: "2026-11-06-sotw-botw-insights",
+    date: "2026-11-06",
+    kind: "new",
+    audience: "admin",
+    title: "SOTW & BotW tab on the admin Dashboard",
+    summary:
+      "A new SOTW & BotW tab on the admin Dashboard shows how the clan takes part in Skill and Boss of the Week. It has the number of competitions, how many different people competed, the average per week, and what share of entrants actually gained. Charts show competitors per week and how many were first-timers versus returning. A Compare weeks section puts skilling weeks next to bossing weeks, or easy boss weeks next to hard ones (turnout, competitors per week, first-timers and more), with a dot for every competition so you can see the spread. A table ranks the most frequent competitors with their wins and top-3 finishes, a list shows regulars who've skipped the latest few, and every competition is listed with its top 3. Filter by SOTW, BotW or both, and by date range. Results are copied from Wise Old Man automatically when you open the page.",
+    tryIt: [
+      "Open the admin panel's Dashboard and pick the SOTW & BotW tab (next to Player Activity).",
+      "Wait a moment while it catches up with Wise Old Man (the first visit loads every past competition).",
+      "Switch between Skill of the Week, Boss of the Week and Both, or change the date range, and click a column in Most frequent competitors to sort it.",
+      "In Compare weeks, switch between Skilling vs bossing and Easy vs hard bosses.",
+    ],
+    links: [{ label: "Dashboard › SOTW & BotW", href: "/admin/competition-insights" }],
+  },
   // ── November 3, 2026 ──────────────────────────────────────────────
   {
     id: "2026-11-03-discord-widget-hidden",
