@@ -5,6 +5,7 @@ import { getAlertChannel } from "@/lib/alert-channels";
 import { createForumPost, createPoll, isDiscordSnowflake, postToChannel } from "@/lib/discord";
 import { splitDiscordMessage } from "@/lib/weekly-announcement-templates";
 import { allowedMetrics } from "@/lib/weekly-poll";
+import { withBotPost } from "@/lib/bot-posts";
 
 export const maxDuration = 60;
 
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
     const content = text(body.results.content);
     if (!isDiscordSnowflake(threadId) || !content) return fail("results", new Error("missing thread or content"), 400);
     try {
-      await postChunks(splitDiscordMessage(content), threadId);
+      await withBotPost({ source: "weekly_results", label: "Weekly results" }, () => postChunks(splitDiscordMessage(content), threadId));
       completed.push("results");
     } catch (err) {
       return fail("results", err);
@@ -102,11 +103,13 @@ export async function POST(request: NextRequest) {
     try {
       // The image goes on the last message so it shows at the bottom, like the hand-made posts.
       const starterImage = chunks.length === 1 && imageUrl ? imageUrl : undefined;
-      const thread = await createForumPost(forumChannelId, title, chunks[0], starterImage);
-      forumThreadId = thread.threadId;
-      for (let i = 1; i < chunks.length; i++) {
-        await postToChannel(thread.threadId, chunks[i], i === chunks.length - 1 && imageUrl ? imageUrl : undefined);
-      }
+      await withBotPost({ source: "weekly_forum", label: title }, async () => {
+        const thread = await createForumPost(forumChannelId, title, chunks[0], starterImage);
+        forumThreadId = thread.threadId;
+        for (let i = 1; i < chunks.length; i++) {
+          await withBotPost({ label: `${title} (part ${i + 1})` }, () => postToChannel(thread.threadId, chunks[i], i === chunks.length - 1 && imageUrl ? imageUrl : undefined));
+        }
+      });
       completed.push("forum");
     } catch (err) {
       // A thread that got created but whose follow-ups failed still counts
@@ -153,7 +156,7 @@ export async function POST(request: NextRequest) {
     const announcementsChannelId = await getAlertChannel(supabase, "weekly_competition_announcements");
     if (!announcementsChannelId) return fail("raffle", new Error("no Weekly SOTW/BotW Announcements channel configured"), 400);
     try {
-      await postChunks(splitDiscordMessage(content), announcementsChannelId);
+      await withBotPost({ source: "weekly_raffle", label: "Raffle winners" }, () => postChunks(splitDiscordMessage(content), announcementsChannelId));
       completed.push("raffle");
     } catch (err) {
       return fail("raffle", err);
@@ -175,7 +178,7 @@ export async function POST(request: NextRequest) {
 
     let created: Awaited<ReturnType<typeof createPoll>>;
     try {
-      created = await createPoll(threadId, question, answers, durationHours, false);
+      created = await withBotPost({ source: "weekly_poll" }, () => createPoll(threadId, question, answers, durationHours, false));
       completed.push("poll");
     } catch (err) {
       return fail("poll", err);

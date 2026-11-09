@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { DISCORD_MESSAGE_LIMIT, nextJagexWeekStart, splitDiscordMessage } from "@/lib/weekly-announcement-templates";
 import { PollChoicesEditor, type PollChoice } from "@/components/admin/PollChoicesEditor";
+import { BotPostEditor } from "@/components/admin/BotPostEditor";
 import { WeeklyVotePolls } from "@/components/admin/WeeklyVotePolls";
 import { bossDifficulty, type BossTiers, type BossTitleNames, type Difficulty } from "@/lib/boss-difficulty";
 import { allowedMetrics } from "@/lib/weekly-poll-metrics";
@@ -618,6 +619,7 @@ export default function WeeklyCompetitionPage() {
       </Card>
 
       <WeeklyVotePolls refreshKey={pollsRefresh} />
+      <BotPostEditor scope="weekly" className="mt-6" />
     </div>
   );
 }

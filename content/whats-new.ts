@@ -34,6 +34,25 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── November 9, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-11-09-edit-bot-posts",
+    date: "2026-11-09",
+    kind: "new",
+    audience: "staff",
+    title: "Fix typos in the bot's Discord posts",
+    summary:
+      "Discord only lets whoever sent a message change it, so the bot's posts couldn't be fixed once they were up. Now they can. Everything the bot posts from the site (announcements, events, competitions, the weekly SOTW/BotW posts and more) is kept in a list under Admin › Discord Posts › Bot Posts, where you can change the text, and the title of a forum post, and save it straight to Discord. Editing doesn't ping anyone again, and images stay as they are. For posts made before today, paste the message's link. The Weekly SOTW/BotW page has the same thing at the bottom, just for the weekly posts. Polls can't be edited: Discord doesn't allow it. Who can use the Bot Posts page is set by the new Edit Bot Posts permission, given to every rank that can manage events.",
+    tryIt: [
+      "Go to Admin › Discord Posts › Bot Posts and press Edit next to a post, or paste a message link (in Discord, right-click the message, then Copy Message Link) and press Load message.",
+      "Change the text and press Save to Discord.",
+      "For the weekly posts, scroll to Edit a weekly post at the bottom of Weekly SOTW/BotW.",
+    ],
+    links: [
+      { label: "Bot Posts", href: "/admin/bot-posts" },
+      { label: "Weekly SOTW/BotW", href: "/admin/weekly-competition" },
+    ],
+  },
   // ── November 7, 2026 ──────────────────────────────────────────────
   {
     id: "2026-11-07-weekly-poll-auto-competition",

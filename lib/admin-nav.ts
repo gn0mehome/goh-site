@@ -27,6 +27,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/announcements", label: "Announcements", group: "Discord Posts", permission: "manage_events" },
   { href: "/admin/polls", label: "Polls", group: "Discord Posts", permission: "manage_polls" },
   { href: "/admin/surveys", label: "Surveys", group: "Discord Posts", permission: "manage_surveys" },
+  { href: "/admin/bot-posts", label: "Bot Posts", group: "Discord Posts", permission: "edit_bot_posts" },
 
   { href: "/admin/wom-competitions", label: "WOM Competitions", group: "Competitions", permission: "manage_competitions" },
   { href: "/admin/weekly-competition", label: "Weekly SOTW/BotW", group: "Competitions", permission: "manage_competitions" },
