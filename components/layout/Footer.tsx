@@ -17,7 +17,7 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-display text-lg text-gold-display mb-3">Quick Links</h4>
+            <h4 className="font-display text-lg text-gold-light mb-3">Quick Links</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/guides" className="text-parchment hover:text-gold-light transition-colors">
@@ -59,7 +59,7 @@ export function Footer() {
 
           {/* Join Us */}
           <div>
-            <h4 className="font-display text-lg text-gold-display mb-3">Join Us</h4>
+            <h4 className="font-display text-lg text-gold-light mb-3">Join Us</h4>
             <ul className="space-y-2 text-sm text-parchment">
               <li>
                 <span className="text-parchment-dark">Clan Chat:</span>{" "}

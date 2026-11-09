@@ -212,6 +212,16 @@ h1, h2, h3 {
   font-family: var(--font-body);
 }
 
+/* Dark mode: the calendar's header row and empty cells use the dark surfaces
+   (they stayed parchment, under light text). */
+.dark .fc-gnome .fc {
+  --fc-neutral-bg-color: var(--d-surface-2);
+  --fc-page-bg-color: var(--d-page);
+  --fc-border-color: var(--d-border);
+  --fc-today-bg-color: color-mix(in srgb, var(--d-gold) 12%, transparent);
+  --fc-list-event-hover-bg-color: var(--d-surface);
+}
+
 .fc-gnome .fc .fc-toolbar-title {
   font-family: var(--font-display);
   color: var(--color-gnome-green);

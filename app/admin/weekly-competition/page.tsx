@@ -532,7 +532,7 @@ export default function WeeklyCompetitionPage() {
         {preview && (
           <div className="mt-6 pt-4 border-t border-parchment-dark space-y-6">
             {preview.warnings.length > 0 && (
-              <ul className="p-3 rounded-md bg-amber-100/60 border border-amber-300 text-xs text-bark-brown list-disc pl-6 space-y-1">
+              <ul className="p-3 rounded-md bg-gold/15 border border-gold/50 text-xs text-bark-brown list-disc pl-6 space-y-1">
                 {preview.warnings.map((w) => <li key={w}>{w}</li>)}
               </ul>
             )}
