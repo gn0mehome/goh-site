@@ -152,6 +152,11 @@ export const PERMISSIONS = {
     label: "Edit Bot Posts",
     description: "Fix the text of messages the bot has posted to Discord",
   },
+  host_bingo_night: {
+    key: "host_bingo_night",
+    label: "Host Bingo Night",
+    description: "Set up Bingo Night games and call them live",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
