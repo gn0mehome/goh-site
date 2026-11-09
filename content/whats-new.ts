@@ -36,6 +36,17 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 9, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-09-theme-contrast-fixes",
+    date: "2026-11-09",
+    kind: "fixed",
+    audience: "everyone",
+    title: "Easier-to-read text in every theme",
+    summary:
+      "We checked the text on over 50 pages in every theme, in light and dark, and fixed what was hard to read. The day names on the Events calendar were nearly invisible in dark mode; the Login button had dark text on dark gold; big gold numbers and headings (like the homepage stats) were too pale on light pages; and a few other spots were too faint. Everything now meets the usual readability standard.",
+    tryIt: ["Open the Events calendar in dark mode (moon button in the menu): the day names along the top are easy to read."],
+    links: [{ label: "Events", href: "/events" }],
+  },
+  {
     id: "2026-11-09-site-themes",
     date: "2026-11-09",
     kind: "new",

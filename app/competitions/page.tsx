@@ -122,7 +122,7 @@ function CompetitionCard({
 }) {
   const statusColors = {
     active: "bg-gnome-green text-text-light",
-    upcoming: "bg-gold text-bark-brown",
+    upcoming: "bg-gold-light text-bark-brown",
     past: "bg-iron-grey text-text-light",
   };
 
