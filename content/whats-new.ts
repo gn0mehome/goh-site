@@ -36,6 +36,17 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 9, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-09-no-auto-host",
+    date: "2026-11-09",
+    kind: "fixed",
+    audience: "everyone",
+    title: "Events no longer list whoever made them in Discord as the host",
+    summary:
+      "Events brought over from Discord used to show the person who created the Discord event as the host, so nearly every event said \"Host: Chesapeake14\" even when someone else was running it. That's been cleared from past and upcoming events, and new events from Discord come in with no host. Hosts that staff typed in by hand are unchanged. To show a host on an event, add one when you edit it in the admin panel.",
+    tryIt: ["Look at the upcoming events on the homepage: they no longer say \"Host: Chesapeake14\"."],
+    links: [{ label: "Home", href: "/" }, { label: "Events", href: "/events" }],
+  },
+  {
     id: "2026-11-09-calendar-weekly-column",
     date: "2026-11-09",
     kind: "improved",
