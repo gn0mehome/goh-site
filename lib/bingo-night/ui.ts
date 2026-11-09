@@ -1,5 +1,6 @@
 // Small helpers shared by the player page, the stream view and the host console.
 
+import { createElement, type ReactNode } from "react";
 import { COLUMNS, PATTERNS, labelFor, type GameConfig, type PatternId } from "./core";
 
 /** Typical round lengths from the spec's 150-player simulations, for the host's pattern menu. */
@@ -45,3 +46,12 @@ export function squareFont(text: string): string {
 }
 
 export { COLUMNS };
+
+/**
+ * The display font (MedievalSharp) draws "!" as a tilted bar that reads like
+ * an "I" ("BINGOI"). Puts each "!" in the body font instead.
+ */
+export function plainBangs(text: string): ReactNode {
+  if (!text.includes("!")) return text;
+  return text.split("!").flatMap((part, i) => (i === 0 ? [part] : [createElement("span", { key: i, style: { fontFamily: "var(--font-body)", lineHeight: 1 } }, "!"), part]));
+}

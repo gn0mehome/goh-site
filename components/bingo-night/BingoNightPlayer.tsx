@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CLAIM_COOLDOWN_MS } from "@/lib/bingo-night/core";
 import { themeVars } from "@/lib/bingo-night/themes";
-import { configFor, patternDescription, patternName, safeLabel } from "@/lib/bingo-night/ui";
+import { configFor, patternDescription, patternName, plainBangs, safeLabel } from "@/lib/bingo-night/ui";
 import type { PlayerCard } from "@/lib/bingo-night/server";
 import { BingoCard } from "./BingoCard";
 import { WikiIcon } from "./WikiIcon";
@@ -204,7 +204,7 @@ export function BingoNightPlayer() {
     <div className="max-w-xl mx-auto space-y-4">
       <header className="text-center">
         <h1 className="font-display text-3xl sm:text-4xl" style={{ color: "var(--bn-accent)" }}>
-          {game.name}
+          {plainBangs(game.name)}
         </h1>
         {offline && <p className="text-sm mt-1 opacity-90">Reconnecting…</p>}
       </header>
@@ -311,7 +311,7 @@ export function BingoNightPlayer() {
             className="w-full py-4 rounded-xl font-display font-bold text-3xl tracking-widest disabled:opacity-50 shadow-lg active:scale-[.99]"
             style={{ background: "var(--bn-accent)", color: "var(--bn-accent-ink)" }}
           >
-            {coolLeft > 0 && verdict?.kind !== "yes" ? `BINGO (${coolLeft}s)` : "BINGO!"}
+            {coolLeft > 0 && verdict?.kind !== "yes" ? `BINGO (${coolLeft}s)` : plainBangs("BINGO!")}
           </button>
           {iWon ? (
             <p className="text-center font-bold text-lg" role="status" style={{ color: "var(--bn-accent)" }}>

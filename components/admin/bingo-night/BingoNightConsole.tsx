@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PATTERN_MENU, type PatternId } from "@/lib/bingo-night/core";
 import { themeVars } from "@/lib/bingo-night/themes";
-import { PATTERN_TIMES, configFor, patternDescription, patternName, safeLabel } from "@/lib/bingo-night/ui";
+import { PATTERN_TIMES, configFor, patternDescription, patternName, plainBangs, safeLabel } from "@/lib/bingo-night/ui";
 import type { ConsoleClaim, ConsoleState } from "@/lib/bingo-night/server";
 import { BingoCard } from "@/components/bingo-night/BingoCard";
 import { PatternPicture } from "@/components/bingo-night/PatternPicture";
@@ -127,7 +127,7 @@ export function BingoNightConsole({ id }: { id: string }) {
           <Link href="/admin/bingo-night" className="text-sm text-gnome-green hover:underline">
             ← All games
           </Link>
-          <h1 className="font-display text-3xl text-gnome-green">{game.name}</h1>
+          <h1 className="font-display text-3xl text-gnome-green">{plainBangs(game.name)}</h1>
           <p className="text-sm text-bark-brown-light">
             {live ? "Live" : game.status === "draft" ? "Draft (not launched)" : "Finished"} · {game.card_mode === "numbers" ? "Number cards" : `Word cards (${game.words?.length ?? 0} words)`} · {s.players}{" "}
             {s.players === 1 ? "player" : "players"} · {s.cardsMade} cards made

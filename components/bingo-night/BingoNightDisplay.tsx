@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { COLUMNS, PER_COLUMN } from "@/lib/bingo-night/core";
 import { themeVars } from "@/lib/bingo-night/themes";
-import { configFor, patternDescription, patternName, safeLabel } from "@/lib/bingo-night/ui";
+import { configFor, patternDescription, patternName, plainBangs, safeLabel } from "@/lib/bingo-night/ui";
 import { PatternPicture } from "./PatternPicture";
 import { QrCode } from "./QrCode";
 import { WikiIcon } from "./WikiIcon";
@@ -92,7 +92,7 @@ export function BingoNightDisplay() {
       <div className="flex flex-col min-h-0" style={{ gap: 28 }}>
         <div>
           <p className="font-display leading-tight" style={{ fontSize: 58, color: "var(--bn-accent)" }}>
-            {game.name}
+            {plainBangs(game.name)}
           </p>
         </div>
         {round ? (
