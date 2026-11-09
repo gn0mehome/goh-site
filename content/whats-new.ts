@@ -42,7 +42,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     audience: "everyone",
     title: "Holiday themes for the site, in light and dark",
     summary:
-      "The site has the same seasonal themes as the stream overlays: Gn0me Home, Halloween, Thanksgiving, Winter Holidays, Valentine's Day, St. Patrick's Day and 4th of July, each with a light and a dark version (the moon button in the menu switches). Admins pick what everyone sees under Admin › Settings › Site Theme, including Auto, which changes with the holidays. Anyone signed in can pick their own theme on My Account, or keep Default to go with the clan's choice. Light or dark is now remembered from your first page load, so it no longer flashes light first.",
+      "The site has the same seasonal themes as the stream overlays: Gn0me Home, Halloween, Thanksgiving, Winter Holidays, Valentine's Day, St. Patrick's Day and 4th of July, each with a light and a dark version (the moon button in the menu switches). The homepage banner gets faded seasonal icons to match: leaves for Thanksgiving, Christmas trees and menorahs for the winter holidays, bats and pumpkins, hearts, shamrocks, and stars and fireworks. Admins pick what everyone sees under Admin › Settings › Site Theme, including Auto, which changes with the holidays. Anyone signed in can pick their own theme on My Account, or keep Default to go with the clan's choice. Light or dark is now remembered from your first page load, so it no longer flashes light first.",
     tryIt: [
       "Admins: go to Admin › Settings › Site Theme, click a theme to try it on the page, then Save site theme.",
       "Members: open My Account, pick a theme under Site theme (or Default) and press Save my theme.",

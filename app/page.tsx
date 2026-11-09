@@ -136,7 +136,7 @@ export default async function HomePage() {
     <div>
       {/* Hero Section */}
       <section className="relative bg-gnome-green overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M20%200L40%2020L20%2040L0%2020Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30" />
+        <div className="absolute inset-0 theme-banner-pattern" aria-hidden />
         {/* With SHOW_DISCORD_WIDGET on: welcome on the left and the live Discord
             widget on the right on wide screens, behind a toggle on smaller ones. */}
         <div className={`relative max-w-7xl mx-auto px-4 py-24 grid gap-10 ${widget ? "lg:py-14 lg:grid-cols-[1fr_auto] lg:items-center" : ""}`}>
