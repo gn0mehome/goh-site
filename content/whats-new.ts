@@ -36,6 +36,20 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 9, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-09-calendar-weekly-column",
+    date: "2026-11-09",
+    kind: "improved",
+    audience: "everyone",
+    title: "Tidier Events calendar: Skill and Boss of the Week on the side",
+    summary:
+      "The month view of the Events calendar no longer fills each week with long Skill of the Week and Boss of the Week bars. Each week's skill and boss are now named in a column on the left, next to that week, with a thin coloured line running across the week (green for Skill of the Week, purple for Boss of the Week). That leaves the days clear for clan events. The week view still shows them as full bars along the top.",
+    tryIt: [
+      "Open Events: the left column names each week's skill and boss.",
+      "Click a name in the column, or the thin line, to see its dates and the Wise Old Man link.",
+    ],
+    links: [{ label: "Events", href: "/events" }],
+  },
+  {
     id: "2026-11-09-theme-contrast-fixes",
     date: "2026-11-09",
     kind: "fixed",

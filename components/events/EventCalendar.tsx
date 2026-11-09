@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -52,6 +52,39 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   other: "#6B6B6B",
 };
 
+/** Skill / Boss of the Week (and other WOM competitions) in the month view: a thin line across the week, named in the left column. */
+const WEEKLY_COLORS = { sotw: "#2E7D6B", botw: "#5D3A9E", other: "#8A6A12" } as const;
+type WeeklyKind = keyof typeof WEEKLY_COLORS;
+
+function weeklyInfo(title: string): { kind: WeeklyKind; tag: string; name: string } {
+  const clean = title.replace(/^🏆\s*/, "");
+  const parts = clean.split("|").map((p) => p.trim());
+  if (/^skill of the week/i.test(clean)) return { kind: "sotw", tag: "Skill of the Week", name: parts[parts.length - 1] || clean };
+  if (/^boss of the week/i.test(clean)) return { kind: "botw", tag: "Boss of the Week", name: parts[parts.length - 1] || clean };
+  return { kind: "other", tag: "Competition", name: clean };
+}
+
+/** Local YYYY-MM-DD for a time. */
+function localDay(t: string | number | Date): string {
+  const d = new Date(t);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** A competition as whole days: the day it starts up to (not including) the day it ends, so a Sunday-to-Sunday week fills one row. */
+function competitionDays(e: { start: string; end?: string }): { start: string; end: string } {
+  const start = localDay(e.start);
+  let end = localDay(e.end ?? e.start);
+  if (end <= start) end = localDay(new Date(`${start}T12:00:00`).getTime() + 86_400_000);
+  return { start, end };
+}
+
+interface WeekRow {
+  /** First day shown in the row (YYYY-MM-DD). */
+  date: string;
+  top: number;
+  height: number;
+}
+
 const FILTER_TYPES: { key: string; label: string; color: string }[] = [
   { key: "pvm", label: "PvM", color: "#8B1A1A" },
   { key: "skilling", label: "Skilling", color: "#2D5016" },
@@ -101,10 +134,54 @@ export function EventCalendar({ events, initialEventId }: EventCalendarProps) {
     (e) => !hiddenTypes.has(e.extendedProps?.eventType ?? "other")
   );
 
-  const coloredEvents = visibleEvents.map((e) => ({
-    ...e,
-    color: e.color ?? EVENT_TYPE_COLORS[e.extendedProps?.eventType ?? "other"] ?? "#6B6B6B",
-  }));
+  const coloredEvents = visibleEvents.map((e) =>
+    e.extendedProps?.isCompetition
+      ? { ...e, ...competitionDays(e), allDay: true, color: WEEKLY_COLORS[weeklyInfo(e.title).kind] }
+      : { ...e, color: e.color ?? EVENT_TYPE_COLORS[e.extendedProps?.eventType ?? "other"] ?? "#6B6B6B" },
+  );
+
+  // Month view: where each week row sits, so the left column can line up with it.
+  const shell = useRef<HTMLDivElement>(null);
+  const [isMonth, setIsMonth] = useState(true);
+  const [rows, setRows] = useState<WeekRow[]>([]);
+  const [shellHeight, setShellHeight] = useState(0);
+  const measure = useCallback(() => {
+    const root = shell.current;
+    if (!root) return;
+    const base = root.getBoundingClientRect().top;
+    const trs = [...root.querySelectorAll<HTMLTableRowElement>(".fc-daygrid-body tbody tr")];
+    setRows(
+      trs
+        .map((tr) => {
+          const first = tr.querySelector<HTMLElement>("td[data-date]");
+          const r = tr.getBoundingClientRect();
+          return first ? { date: first.dataset.date!, top: r.top - base, height: r.height } : null;
+        })
+        .filter((x): x is WeekRow => !!x),
+    );
+    setShellHeight(root.getBoundingClientRect().height);
+  }, []);
+  const scheduleMeasure = useCallback(() => requestAnimationFrame(measure), [measure]);
+  useEffect(() => {
+    const root = shell.current;
+    if (!root) return;
+    const ro = new ResizeObserver(scheduleMeasure);
+    ro.observe(root);
+    return () => ro.disconnect();
+  }, [scheduleMeasure]);
+
+  const competitions = visibleEvents.filter((e) => e.extendedProps?.isCompetition).map((e) => ({ event: e, ...competitionDays(e) }));
+  const weekLabels = (row: WeekRow) => {
+    const to = localDay(new Date(`${row.date}T12:00:00`).getTime() + 7 * 86_400_000);
+    return competitions
+      .filter((c) => c.start < to && c.end > row.date)
+      .map((c) => ({ event: c.event, ...weeklyInfo(c.event.title) }))
+      .sort((a, b) => a.kind.localeCompare(b.kind));
+  };
+  const openEvent = (e: CalendarEvent) => {
+    setSelectedEvent(e);
+    setLinkCopied(false);
+  };
 
   return (
     <div>
@@ -133,7 +210,36 @@ export function EventCalendar({ events, initialEventId }: EventCalendarProps) {
         })}
       </div>
 
-      <div className="fc-gnome">
+      <div className="flex gap-2 sm:gap-3">
+        {isMonth && (
+          <div className="relative w-20 sm:w-36 shrink-0" style={{ height: shellHeight }} aria-label="Skill and Boss of the Week">
+            {rows.map((row) => {
+              const labels = weekLabels(row);
+              if (!labels.length) return null;
+              return (
+                <div key={row.date} className="absolute inset-x-0 flex flex-col justify-center gap-1 py-1 overflow-hidden" style={{ top: row.top, height: row.height }}>
+                  {labels.map((l) => (
+                    <button
+                      key={l.event.id}
+                      type="button"
+                      onClick={() => openEvent(l.event)}
+                      className="text-left rounded-r-md pl-2 pr-1 py-0.5 border-l-4 bg-parchment-dark/60 hover:bg-parchment-dark cursor-pointer"
+                      style={{ borderColor: WEEKLY_COLORS[l.kind] }}
+                      title={l.event.title.replace(/^🏆\s*/, "")}
+                    >
+                      <span className="block text-[10px] sm:text-[11px] uppercase tracking-wide text-iron-grey leading-tight">
+                        <span className="sm:hidden">{l.kind === "other" ? "Comp" : l.kind.toUpperCase()}</span>
+                        <span className="hidden sm:inline">{l.tag}</span>
+                      </span>
+                      <span className="block text-xs sm:text-sm font-semibold text-bark-brown leading-tight truncate">{l.name}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      <div className="fc-gnome flex-1 min-w-0" ref={shell}>
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
           initialView="dayGridMonth"
@@ -146,14 +252,22 @@ export function EventCalendar({ events, initialEventId }: EventCalendarProps) {
           events={coloredEvents}
           eventClick={(info) => {
             const event = visibleEvents.find((e) => e.id === info.event.id);
-            if (event) {
-              setSelectedEvent(event);
-              setLinkCopied(false);
-            }
+            if (event) openEvent(event);
           }}
           height="auto"
           eventDisplay="block"
+          datesSet={(arg) => {
+            setIsMonth(arg.view.type === "dayGridMonth");
+            scheduleMeasure();
+          }}
+          eventsSet={scheduleMeasure}
+          // Month view: competitions are a thin line across the week (named in the left column).
+          eventClassNames={(arg) => (arg.view.type === "dayGridMonth" && arg.event.extendedProps.isCompetition ? ["fc-week-line"] : [])}
+          eventDidMount={(arg) => {
+            if (arg.view.type === "dayGridMonth" && arg.event.extendedProps.isCompetition) arg.el.title = arg.event.title.replace(/^🏆\s*/, "");
+          }}
         />
+      </div>
       </div>
 
       {/* Event Detail Modal */}
