@@ -147,6 +147,11 @@ export const PERMISSIONS = {
     label: "Configure RuneLite Plugin",
     description: "Set the clan name and colour theme every member's companion plugin uses",
   },
+  edit_bot_posts: {
+    key: "edit_bot_posts",
+    label: "Edit Bot Posts",
+    description: "Fix the text of messages the bot has posted to Discord",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",

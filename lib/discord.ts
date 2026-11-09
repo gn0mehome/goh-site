@@ -4,6 +4,7 @@
  */
 
 import { resolveUnicodeShortcodes } from "./emoji-shortcodes";
+import { recordBotPost, recordBotPostEdit, withBotPost } from "./bot-posts";
 
 const DISCORD_API = "https://discord.com/api/v10";
 
@@ -265,6 +266,10 @@ export async function getChannelMessages(channelId: string, limit: number = 50) 
  * Supports single image URL string or array of URLs (up to 10 embeds).
  */
 export async function postToChannel(channelId: string, content: string, imageUrl?: string | string[]) {
+  return sendMessage(channelId, content, imageUrl, true);
+}
+
+async function sendMessage(channelId: string, content: string, imageUrl: string | string[] | undefined, record: boolean) {
   const body: Record<string, unknown> = { content: await resolveEmoteShorthand(content) };
 
   if (imageUrl) {
@@ -285,7 +290,9 @@ export async function postToChannel(channelId: string, content: string, imageUrl
     throw new Error(`Discord API error: ${res.status} ${error}`);
   }
 
-  return res.json();
+  const message = await res.json();
+  if (record) await recordBotPost({ channelId, messageId: message.id, content: body.content as string, hasImages: !!body.embeds });
+  return message;
 }
 
 /** Gets (or lazily creates) the DM channel id for a user -- Discord treats DMs as just another channel once one exists. */
@@ -313,7 +320,8 @@ async function getOrCreateDmChannel(discordId: string): Promise<string> {
  */
 export async function sendDirectMessage(discordId: string, content: string) {
   const channelId = await getOrCreateDmChannel(discordId);
-  return postToChannel(channelId, content);
+  // DMs are private, so they're not added to the bot post log.
+  return sendMessage(channelId, content, undefined, false);
 }
 
 /**
@@ -350,7 +358,9 @@ export async function editChannelMessage(channelId: string, messageId: string, c
     throw new Error(`Discord API error: ${res.status} ${error}`);
   }
 
-  return res.json();
+  const edited = await res.json();
+  await recordBotPostEdit(channelId, messageId, body.content as string);
+  return edited;
 }
 
 /**
@@ -397,6 +407,7 @@ export async function createForumPost(
   }
 
   const thread = await res.json();
+  await recordBotPost({ channelId: thread.id, messageId: thread.message.id, content: message.content as string, label: title, hasImages: !!message.embeds });
   return { threadId: thread.id, messageId: thread.message.id };
 }
 
@@ -416,17 +427,19 @@ export async function postToDestination(
   imageUrl?: string | string[],
   autoArchiveDuration?: number
 ): Promise<{ channelId: string; messageId: string }> {
-  const type = await getChannelType(channelId);
-  if (type === GUILD_FORUM || type === GUILD_MEDIA) {
-    const { threadId, messageId } = await createForumPost(channelId, title, content, imageUrl, autoArchiveDuration);
-    return { channelId: threadId, messageId };
-  }
-  // A plain channel has nothing to archive -- autoArchiveDuration is
-  // deliberately ignored here rather than rejected, so one form can serve
-  // both kinds of destination.
+  return withBotPost({ label: title }, async () => {
+    const type = await getChannelType(channelId);
+    if (type === GUILD_FORUM || type === GUILD_MEDIA) {
+      const { threadId, messageId } = await createForumPost(channelId, title, content, imageUrl, autoArchiveDuration);
+      return { channelId: threadId, messageId };
+    }
+    // A plain channel has nothing to archive -- autoArchiveDuration is
+    // deliberately ignored here rather than rejected, so one form can serve
+    // both kinds of destination.
 
-  const result = await postToChannel(channelId, content, imageUrl);
-  return { channelId, messageId: result.id };
+    const result = await postToChannel(channelId, content, imageUrl);
+    return { channelId, messageId: result.id as string };
+  }, { fallback: true });
 }
 
 /**
@@ -569,6 +582,7 @@ export async function createPoll(
   }
 
   const message = await res.json();
+  await recordBotPost({ channelId, messageId: message.id, content: [resolvedQuestion, ...resolvedAnswers.map((a) => `• ${a}`)].join("\n"), label: question, hasPoll: true });
   const answers: { answer_id: number; poll_media: { text: string } }[] = message.poll?.answers ?? [];
 
   // Match against Discord's response using the resolved text (what was
@@ -628,4 +642,44 @@ export async function getDiscordEvents() {
   }
 
   return res.json();
+}
+
+/** Fetches one message (any kind), e.g. to load a bot post for editing. */
+export async function getChannelMessage(channelId: string, messageId: string) {
+  const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages/${messageId}`, { headers: getHeaders() });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error fetching message: ${res.status} ${error}`);
+  }
+  return res.json();
+}
+
+/** A channel or thread's name, type and parent, or null if it can't be read. */
+export async function getChannelInfo(channelId: string): Promise<{ id: string; name: string; type: number; parent_id: string | null } | null> {
+  try {
+    const res = await fetch(`${DISCORD_API}/channels/${channelId}`, { headers: getHeaders() });
+    return res.ok ? res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Renames a thread or forum post. */
+export async function renameThread(threadId: string, name: string) {
+  const res = await fetch(`${DISCORD_API}/channels/${threadId}`, { method: "PATCH", headers: getHeaders(), body: JSON.stringify({ name: name.slice(0, 100) }) });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error renaming thread: ${res.status} ${error}`);
+  }
+  return res.json();
+}
+
+let botUserId: string | null = null;
+/** The bot's own user id (only its messages can be edited). */
+export async function getBotUserId(): Promise<string> {
+  if (botUserId) return botUserId;
+  const res = await fetch(`${DISCORD_API}/users/@me`, { headers: getHeaders() });
+  if (!res.ok) throw new Error(`Discord API error: ${res.status} ${await res.text()}`);
+  botUserId = (await res.json()).id as string;
+  return botUserId;
 }

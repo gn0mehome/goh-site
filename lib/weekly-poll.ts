@@ -8,6 +8,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getPollMessage, postToDestination } from "@/lib/discord";
 import { getAlertChannel } from "@/lib/alert-channels";
+import { withBotPost } from "@/lib/bot-posts";
 import { createWomCompetition } from "@/lib/wom";
 import { WOM_GROUP_ID } from "@/lib/constants";
 import { bossName, bossTitleName } from "@/lib/boss-difficulty";
@@ -120,7 +121,7 @@ export async function createCompetitionsForOption(
       try {
         const channelId = await getAlertChannel(supabase, "competitions");
         const when = start.toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric" });
-        if (channelId) await postToDestination(channelId, title, `🏆 **New competition:** ${title}\nVoted in by the clan!\nStarts: ${when}\nhttps://wiseoldman.net/competitions/${result.competition.id}`);
+        if (channelId) await withBotPost({ source: "weekly_announce" }, () => postToDestination(channelId, title, `🏆 **New competition:** ${title}\nVoted in by the clan!\nStarts: ${when}\nhttps://wiseoldman.net/competitions/${result.competition.id}`));
       } catch (err) {
         console.error("Weekly poll: competition announcement failed:", err);
       }
