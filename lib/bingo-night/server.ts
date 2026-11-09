@@ -32,6 +32,9 @@ export interface GameRow {
   word_set: string | null;
   words: string[] | null;
   winner_message: string;
+  /** Word games: show OSRS Wiki item pictures (word_icons lines up with words). */
+  show_pictures: boolean;
+  word_icons: (string | null)[] | null;
   status: GameStatus;
   scheduled_for: string | null;
   current_round_id: string | null;
@@ -142,7 +145,7 @@ export async function getRound(sb: SupabaseClient, id: string | null): Promise<R
 }
 
 export interface PublicState {
-  game: { id: string; name: string; theme: string; mode: "numbers" | "words"; words: string[] | null; winnerMessage: string } | null;
+  game: { id: string; name: string; theme: string; mode: "numbers" | "words"; words: string[] | null; icons: (string | null)[] | null; winnerMessage: string } | null;
   round: {
     id: string;
     number: number;
@@ -182,7 +185,15 @@ export async function publicState(sb: SupabaseClient): Promise<PublicState> {
     for (const c of data ?? []) names.set(c.id, c.rsn);
   }
   return {
-    game: { id: game.id, name: game.name, theme: game.theme, mode: game.card_mode, words: game.card_mode === "words" ? game.words : null, winnerMessage: game.winner_message },
+    game: {
+      id: game.id,
+      name: game.name,
+      theme: game.theme,
+      mode: game.card_mode,
+      words: game.card_mode === "words" ? game.words : null,
+      icons: game.card_mode === "words" && game.show_pictures ? game.word_icons : null,
+      winnerMessage: game.winner_message,
+    },
     round: round && {
       id: round.id,
       number: round.number,

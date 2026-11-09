@@ -3,6 +3,7 @@ import { checkPermission } from "@/lib/check-permission";
 import { validateWords, WORD_SETS } from "@/lib/bingo-night/core";
 import { BINGO_THEMES } from "@/lib/bingo-night/themes";
 import { BingoError, bingoDb, launchGame, type GameRow } from "@/lib/bingo-night/server";
+import { findWordPictures, isWikiImage } from "@/lib/bingo-night/wiki-icons";
 
 // Bingo Night games: list, save drafts, copy, delete, launch.
 
@@ -38,6 +39,7 @@ function readGame(body: Record<string, unknown>) {
   }
   const at = typeof body.scheduled_for === "string" && body.scheduled_for ? new Date(body.scheduled_for) : null;
   return {
+    show_pictures: mode === "words" && body.show_pictures === true,
     name,
     theme,
     card_mode: mode,
@@ -48,7 +50,22 @@ function readGame(body: Record<string, unknown>) {
   };
 }
 
-// POST { action: "save" (with id to update a draft) | "copy" | "delete" | "launch", ... }
+/**
+ * The pictures to save: the editor's list (wiki images only, one per word)
+ * when it lines up with the words, otherwise looked up again. A wiki hiccup
+ * never blocks saving; the game just has no pictures until it's saved again.
+ */
+async function pictureFields(words: string[] | null, show: boolean, given: unknown): Promise<{ show_pictures: boolean; word_icons: (string | null)[] | null }> {
+  if (!show || !words?.length) return { show_pictures: false, word_icons: null };
+  if (Array.isArray(given) && given.length === words.length && given.every((u) => u === null || isWikiImage(u))) return { show_pictures: true, word_icons: given as (string | null)[] };
+  try {
+    return { show_pictures: true, word_icons: await findWordPictures(words) };
+  } catch {
+    return { show_pictures: true, word_icons: null };
+  }
+}
+
+// POST { action: "save" (with id to update a draft) | "pictures" | "copy" | "delete" | "launch", ... }
 export async function POST(request: NextRequest) {
   const me = await staff();
   if (!me) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -56,18 +73,34 @@ export async function POST(request: NextRequest) {
   const sb = bingoDb();
   try {
     const id = typeof body.id === "string" ? body.id : null;
+    if (body.action === "pictures") {
+      // Preview for the editor: an OSRS Wiki picture (or null) for each word.
+      const words = typeof body.word_set === "string" && body.word_set in WORD_SETS ? WORD_SETS[body.word_set].words : validateWords(Array.isArray(body.words) ? body.words : String(body.words ?? "")).words;
+      if (!words.length) throw new BingoError("Add some words first.");
+      try {
+        return NextResponse.json({ words, icons: await findWordPictures(words.slice(0, 100)) });
+      } catch {
+        throw new BingoError("Couldn't reach the OSRS Wiki for pictures. Try again in a moment.", 502);
+      }
+    }
     if (body.action === "save") {
       const fields = readGame(body);
       if (id) {
-        const { data: g } = await sb.from("bingo_night_games").select("status").eq("id", id).maybeSingle();
+        const { data: g } = await sb.from("bingo_night_games").select("status, card_mode, words").eq("id", id).maybeSingle();
         if (!g) throw new BingoError("That game doesn't exist.", 404);
-        // Once live, only the name, theme, message and date can change (not the cards).
-        const patch = g.status === "draft" ? fields : { name: fields.name, theme: fields.theme, winner_message: fields.winner_message, scheduled_for: fields.scheduled_for };
+        // Once live, only the name, theme, message, date and pictures can change (not the cards).
+        const words: string[] | null = g.status === "draft" ? fields.words : g.card_mode === "words" ? g.words : null;
+        const pictures = await pictureFields(words, fields.show_pictures && (g.status === "draft" || g.card_mode === "words"), body.word_icons);
+        const patch =
+          g.status === "draft"
+            ? { ...fields, ...pictures }
+            : { name: fields.name, theme: fields.theme, winner_message: fields.winner_message, scheduled_for: fields.scheduled_for, ...pictures };
         const { error } = await sb.from("bingo_night_games").update(patch).eq("id", id);
         if (error) throw new Error(error.message);
         return NextResponse.json({ id });
       }
-      const { data, error } = await sb.from("bingo_night_games").insert({ ...fields, created_by: me.name }).select("id").single();
+      const pictures = await pictureFields(fields.words, fields.show_pictures, body.word_icons);
+      const { data, error } = await sb.from("bingo_night_games").insert({ ...fields, ...pictures, created_by: me.name }).select("id").single();
       if (error) throw new Error(error.message);
       return NextResponse.json({ id: data.id });
     }
@@ -77,7 +110,7 @@ export async function POST(request: NextRequest) {
       if (!g) throw new BingoError("That game doesn't exist.", 404);
       const { data, error } = await sb
         .from("bingo_night_games")
-        .insert({ name: `${g.name} (copy)`.slice(0, 80), theme: g.theme, card_mode: g.card_mode, word_set: g.word_set, words: g.words, winner_message: g.winner_message, created_by: me.name })
+        .insert({ name: `${g.name} (copy)`.slice(0, 80), theme: g.theme, card_mode: g.card_mode, word_set: g.word_set, words: g.words, show_pictures: g.show_pictures, word_icons: g.word_icons, winner_message: g.winner_message, created_by: me.name })
         .select("id")
         .single();
       if (error) throw new Error(error.message);

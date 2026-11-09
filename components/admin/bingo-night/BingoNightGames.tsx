@@ -8,6 +8,7 @@ import { MAX_WORDS, MAX_WORD_LENGTH, MIN_WORDS, validateWords, WORD_SETS } from 
 import { BINGO_THEMES } from "@/lib/bingo-night/themes";
 import type { GameRow } from "@/lib/bingo-night/server";
 import { InviteQr } from "./InviteQr";
+import { WikiIcon } from "@/components/bingo-night/WikiIcon";
 
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 
@@ -21,9 +22,15 @@ interface Draft {
   winner_message: string;
   scheduled_for: string; // datetime-local
   status: GameRow["status"];
+  /** Word games: show OSRS Wiki item pictures. */
+  show_pictures: boolean;
+  /** The pictures found for a word list (and which words they belong to). */
+  pictures: { words: string[]; icons: (string | null)[] } | null;
+  /** Live games keep their words; pictures line up with these. */
+  liveWords?: string[] | null;
 }
 
-const EMPTY: Draft = { id: null, name: "", theme: "gnome", card_mode: "numbers", word_set: "osrs_classic", words: "", winner_message: "Meet the host at the Clan Hall to collect your prize.", scheduled_for: "", status: "draft" };
+const EMPTY: Draft = { id: null, name: "", theme: "gnome", card_mode: "numbers", word_set: "osrs_classic", words: "", winner_message: "Meet the host at the Clan Hall to collect your prize.", scheduled_for: "", status: "draft", show_pictures: false, pictures: null };
 
 const toLocal = (iso: string | null) => {
   if (!iso) return "";
@@ -81,6 +88,9 @@ export function BingoNightGames() {
       winner_message: g.winner_message,
       scheduled_for: toLocal(g.scheduled_for),
       status: g.status,
+      show_pictures: g.show_pictures,
+      pictures: g.words && g.word_icons && g.word_icons.length === g.words.length ? { words: g.words, icons: g.word_icons } : null,
+      liveWords: g.status === "draft" ? null : g.words,
     });
 
   const save = async () => {
@@ -95,6 +105,9 @@ export function BingoNightGames() {
       words: draft.words,
       winner_message: draft.winner_message,
       scheduled_for: draft.scheduled_for ? new Date(draft.scheduled_for).toISOString() : "",
+      show_pictures: draft.card_mode === "words" && draft.show_pictures,
+      // Only send the preview if it's for these exact words; otherwise the server looks them up.
+      word_icons: draft.pictures && sameWords(draft.pictures.words, currentWords(draft)) ? draft.pictures.icons : undefined,
     };
     if (await act("save", body, "Saved.")) setDraft(null);
   };
@@ -202,6 +215,8 @@ export function BingoNightGames() {
             )}
           </fieldset>
 
+          {draft.card_mode === "words" && <PicturesPanel draft={draft} setDraft={setDraft} />}
+
           <label className="block text-sm text-bark-brown">
             Winner message
             <input className={`${inputClass} mt-1`} value={draft.winner_message} maxLength={300} onChange={(e) => setDraft({ ...draft, winner_message: e.target.value })} />
@@ -289,6 +304,107 @@ export function BingoNightGames() {
       </Card>
 
       <InviteQr />
+    </div>
+  );
+}
+
+/** The words a draft's cards will use. */
+function currentWords(d: Draft): string[] {
+  if (d.liveWords) return d.liveWords;
+  if (d.word_set !== "custom") return WORD_SETS[d.word_set]?.words ?? [];
+  return validateWords(d.words).words;
+}
+const sameWords = (a: string[], b: string[]) => a.length === b.length && a.every((w, i) => w === b[i]);
+
+/**
+ * "Show item pictures": finds each word's picture on the OSRS Wiki and shows
+ * them, so staff can see what players will get and click to remove any.
+ */
+function PicturesPanel({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const words = currentWords(draft);
+  const fresh = !!draft.pictures && sameWords(draft.pictures.words, words);
+  const found = fresh ? draft.pictures!.icons.filter(Boolean).length : 0;
+
+  const find = async (d: Draft) => {
+    const ws = currentWords(d);
+    if (ws.length < MIN_WORDS) return;
+    setBusy(true);
+    setError(null);
+    const res = await fetch("/api/admin/bingo-night", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "pictures", words: ws }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) return setError(data.error ?? "Couldn't find pictures.");
+    setDraft({ ...d, show_pictures: true, pictures: { words: ws, icons: data.icons } });
+  };
+
+  const toggle = (on: boolean) => {
+    const next = { ...draft, show_pictures: on };
+    setDraft(next);
+    if (on && !fresh) void find(next);
+  };
+
+  const drop = (i: number) => {
+    if (!draft.pictures) return;
+    const icons = [...draft.pictures.icons];
+    icons[i] = null;
+    setDraft({ ...draft, pictures: { ...draft.pictures, icons } });
+  };
+
+  return (
+    <div className="space-y-2 rounded-md border border-bark-brown-light/40 p-3">
+      <label className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
+        <input type="checkbox" checked={draft.show_pictures} onChange={(e) => toggle(e.target.checked)} className="accent-gnome-green" />
+        Show item pictures from the OSRS Wiki
+      </label>
+      <p className="text-xs text-iron-grey">
+        Words that are OSRS items (foods, gear, drops) get their inventory picture on the cards and the stream. Places, bosses and other words stay as text.
+      </p>
+      {draft.show_pictures && (
+        <>
+          {busy ? (
+            <p className="text-sm text-iron-grey">Looking up pictures on the OSRS Wiki…</p>
+          ) : !fresh ? (
+            <Button size="sm" variant="secondary" onClick={() => find(draft)} disabled={words.length < MIN_WORDS}>
+              Find pictures
+            </Button>
+          ) : (
+            <>
+              <p className="text-xs text-bark-brown">
+                {found} of {words.length} words have a picture. Click one to remove its picture.{" "}
+                <button type="button" className="text-gnome-green hover:underline" onClick={() => find(draft)}>
+                  Look them up again
+                </button>
+              </p>
+              <ul className="flex flex-wrap gap-1.5">
+                {words.map((w, i) => {
+                  const icon = draft.pictures!.icons[i];
+                  return (
+                    <li key={w}>
+                      <button
+                        type="button"
+                        disabled={!icon}
+                        onClick={() => drop(i)}
+                        title={icon ? "Click to remove this picture" : "No picture"}
+                        className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs ${icon ? "border-bark-brown-light/60 bg-parchment hover:border-red-accent hover:line-through cursor-pointer" : "border-transparent text-iron-grey"}`}
+                      >
+                        <WikiIcon src={icon} size={22} />
+                        {w}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+          {error && <p className="text-xs text-red-accent">{error}</p>}
+        </>
+      )}
     </div>
   );
 }
