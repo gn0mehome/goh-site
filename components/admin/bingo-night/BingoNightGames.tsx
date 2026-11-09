@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { MAX_WORDS, MAX_WORD_LENGTH, MIN_WORDS, validateWords, WORD_SETS } from "@/lib/bingo-night/core";
 import { BINGO_THEMES } from "@/lib/bingo-night/themes";
 import type { GameRow } from "@/lib/bingo-night/server";
+import { InviteQr } from "./InviteQr";
 
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 
@@ -286,6 +287,8 @@ export function BingoNightGames() {
           </ul>
         )}
       </Card>
+
+      <InviteQr />
     </div>
   );
 }

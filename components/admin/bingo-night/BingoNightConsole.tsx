@@ -10,6 +10,7 @@ import { PATTERN_TIMES, configFor, patternDescription, patternName, safeLabel } 
 import type { ConsoleClaim, ConsoleState } from "@/lib/bingo-night/server";
 import { BingoCard } from "@/components/bingo-night/BingoCard";
 import { PatternPicture } from "@/components/bingo-night/PatternPicture";
+import { InviteQr } from "./InviteQr";
 
 const time = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit" });
 
@@ -340,6 +341,8 @@ export function BingoNightConsole({ id }: { id: string }) {
           )}
         </Card>
       </div>
+
+      {live && <InviteQr />}
 
       {s.rounds.length > 0 && (
         <Card hover={false}>

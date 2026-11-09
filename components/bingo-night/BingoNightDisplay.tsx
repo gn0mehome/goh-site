@@ -5,11 +5,20 @@ import { COLUMNS, PER_COLUMN } from "@/lib/bingo-night/core";
 import { themeVars } from "@/lib/bingo-night/themes";
 import { configFor, patternDescription, patternName, safeLabel } from "@/lib/bingo-night/ui";
 import { PatternPicture } from "./PatternPicture";
+import { QrCode } from "./QrCode";
 import { useBingoState } from "./useBingoState";
 
 const W = 1920;
 const H = 1080;
-const JOIN = "gn0mehome.com/bingo-night";
+/** Where players join, as it's shown on screen (the real address comes from the page itself). */
+function useJoinUrl() {
+  const [url, setUrl] = useState("https://gn0mehome.com/bingo-night");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setUrl(`${window.location.origin}/bingo-night`);
+  }, []);
+  return url;
+}
 
 /** Fits the 1920×1080 stage into the window, whatever its size. */
 function useStageScale() {
@@ -31,6 +40,8 @@ function useStageScale() {
 export function BingoNightDisplay() {
   const { state } = useBingoState(1500);
   const scale = useStageScale();
+  const joinUrl = useJoinUrl();
+  const JOIN = joinUrl.replace(/^https?:\/\//, "");
   const game = state?.game ?? null;
   const round = state?.round ?? null;
   const config = useMemo(() => configFor(game?.mode ?? "numbers", game?.words ?? null), [game?.mode, game?.words]);
@@ -182,16 +193,22 @@ export function BingoNightDisplay() {
             </div>
           )}
         </div>
-        <div className="flex items-center justify-between" style={{ fontSize: 36 }}>
-          <span>
-            Play at <b style={{ color: "var(--bn-accent)" }}>{JOIN}</b>
+        <div className="flex items-center justify-between" style={{ fontSize: 36, gap: 24 }}>
+          <span className="flex items-center" style={{ gap: 20 }}>
+            <QrCode url={joinUrl} size={150} />
+            <span>
+              Scan or go to
+              <b className="block" style={{ color: "var(--bn-accent)" }}>
+                {JOIN}
+              </b>
+            </span>
           </span>
           {state.pastWinners.length > 0 && <span style={{ fontSize: 28, opacity: 0.85 }}>Earlier winners: {state.pastWinners.slice(0, 3).map((w) => w.rsn).join(", ")}</span>}
         </div>
       </div>
 
       {winners.length > 0 && (
-        <div className="absolute left-0 right-0 bn-pop flex items-center justify-center" style={{ bottom: 140 }}>
+        <div className="absolute left-0 right-0 bn-pop flex items-center justify-center" style={{ top: 330 }}>
           <div className="rounded-3xl text-center shadow-2xl" style={{ padding: "28px 72px", background: "var(--bn-accent)", color: "var(--bn-accent-ink)", border: "6px solid var(--bn-panel)" }}>
             <p className="uppercase font-bold" style={{ fontSize: 32, letterSpacing: 6 }}>
               🎉 Bingo! Round {round?.number} winner{winners.length > 1 ? "s" : ""}
