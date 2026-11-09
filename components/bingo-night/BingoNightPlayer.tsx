@@ -49,6 +49,7 @@ type Verdict = { kind: "checking" | "yes" | "no"; text: string } | null;
 
 export function BingoNightPlayer() {
   const { state, offline } = useBingoState();
+  const wide = useWideScreen();
   const [key, setKey] = useState<string | null>(null);
   const [card, setCard] = useState<PlayerCard | null>(null);
   const [cardLoaded, setCardLoaded] = useState<string | null>(null); // game id the card lookup was done for
@@ -200,159 +201,219 @@ export function BingoNightPlayer() {
   const coolLeft = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
   const showSwap = !!card && (!round || round.status === "open") && keptForRound !== (round?.id ?? "none");
 
+  // ---- pieces, arranged below for phones (one column) or wide screens (two)
+  const header = (
+    <header className="text-center">
+      <h1 className="font-display text-3xl sm:text-4xl" style={{ color: "var(--bn-accent)" }}>
+        {plainBangs(game.name)}
+      </h1>
+      {offline && <p className="text-sm mt-1 opacity-90">Reconnecting…</p>}
+    </header>
+  );
+
+  const lastCallBig = wide && !!lastCall;
+  const roundBox = (
+    <section className={`rounded-xl p-3 flex ${lastCallBig ? "flex-wrap" : ""} items-center gap-3`} style={{ background: "rgba(0,0,0,.22)" }}>
+      {round ? (
+        <>
+          <PatternPicture pattern={round.pattern} size={52} />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs uppercase tracking-widest opacity-80">
+              Round {round.number} · {round.status === "open" ? "starting soon" : round.status === "live" ? "playing" : "over"}
+            </p>
+            <p className="font-bold text-lg leading-tight">{patternName(round.pattern)}</p>
+            <p className="text-xs opacity-80">{patternDescription(round.pattern)}</p>
+          </div>
+          <div className={lastCallBig ? "w-full text-center pt-2 border-t border-white/15" : "text-right shrink-0"}>
+            <p className="text-[11px] uppercase tracking-widest opacity-80">Last call</p>
+            <p
+              className={`font-display font-bold leading-none flex items-center gap-1.5 ${lastCallBig ? "justify-center py-1" : "justify-end"}`}
+              style={{ color: "var(--bn-accent)", fontSize: lastCallBig ? (lastCall!.length > 12 ? "2rem" : "2.8rem") : lastCall && lastCall.length > 8 ? "1.15rem" : "2.1rem" }}
+              aria-live="polite"
+            >
+              <WikiIcon src={lastIcon} size={lastCallBig ? "3rem" : "1.6rem"} />
+              {lastCall ?? "–"}
+            </p>
+            <p className="text-[11px] opacity-80">{calls.length} called</p>
+          </div>
+        </>
+      ) : (
+        <p className="text-center w-full py-2">Get your card. The first round starts soon.</p>
+      )}
+    </section>
+  );
+
+  const winBox = iWon && (
+    <div className="rounded-xl p-4 text-center font-bold text-lg" style={{ background: "var(--bn-accent)", color: "var(--bn-accent-ink)" }} role="status">
+      🎉 You won round {round?.number}!{game.winnerMessage && <span className="block text-base font-semibold mt-1">{game.winnerMessage}</span>}
+    </div>
+  );
+
+  const joinForm = !card && cardLoaded === game.id && (
+    <form
+      className="rounded-xl p-4 space-y-3"
+      style={{ background: "var(--bn-panel)", color: "var(--bn-ink)" }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        void join();
+      }}
+    >
+      <label className="block font-bold" htmlFor="bn-rsn">
+        Your RSN
+      </label>
+      <input
+        id="bn-rsn"
+        value={rsn}
+        onChange={(e) => setRsn(e.target.value)}
+        maxLength={12}
+        autoComplete="nickname"
+        className="w-full px-3 py-3 rounded-md border text-lg"
+        style={{ borderColor: "var(--bn-head)", background: "#fff", color: "var(--bn-ink)" }}
+        placeholder="e.g. Gn0me Vlad"
+      />
+      <button type="submit" disabled={busy || !rsn.trim()} className="w-full py-3 rounded-md font-bold text-lg disabled:opacity-60" style={{ background: "var(--bn-hit)", color: "var(--bn-hit-ink)" }}>
+        {busy ? "Making your card…" : "Get my card"}
+      </button>
+      {error && <p className="text-sm font-semibold text-red-700">{error}</p>}
+    </form>
+  );
+
+  const nameRow = card && (
+    <div className="flex items-center justify-between text-sm">
+      <span className="font-bold">
+        {card.rsn}
+        {card.member && (
+          <span className="ml-2 text-[11px] px-2 py-0.5 rounded-full align-middle" style={{ background: "var(--bn-accent)", color: "var(--bn-accent-ink)" }}>
+            Gn0me Home
+          </span>
+        )}
+      </span>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" checked={autoMark} onChange={(e) => setAuto(e.target.checked)} className="w-4 h-4" />
+        Auto-mark
+      </label>
+    </div>
+  );
+
+  const cardView = card && <BingoCard squares={card.squares} config={config} marked={marked} called={called} onTap={tap} icons={icons} />;
+
+  const swapBox = showSwap && (
+    <div className="rounded-xl p-3 text-center space-y-2" style={{ background: "rgba(0,0,0,.22)" }}>
+      <p className="text-sm">{round ? `Round ${round.number} is about to start. Happy with your card?` : "Not keen on this card? You can swap it until the round starts."}</p>
+      <div className="flex gap-2 justify-center">
+        <button type="button" onClick={() => setKeptForRound(round?.id ?? "none")} className="px-4 py-2 rounded-md font-bold" style={{ background: "var(--bn-panel)", color: "var(--bn-ink)" }}>
+          Keep my card
+        </button>
+        <button type="button" onClick={swap} disabled={busy} className="px-4 py-2 rounded-md font-bold disabled:opacity-60" style={{ background: "var(--bn-accent)", color: "var(--bn-accent-ink)" }}>
+          {busy ? "Swapping…" : "Get a new card"}
+        </button>
+      </div>
+    </div>
+  );
+
+  const claimBox = card && (
+    <>
+      {error && <p className="text-sm font-semibold text-center">{error}</p>}
+      <button
+        type="button"
+        onClick={claim}
+        disabled={round?.status !== "live" || coolLeft > 0 || iWon}
+        className="w-full py-4 rounded-xl font-display font-bold text-3xl tracking-widest disabled:opacity-50 shadow-lg active:scale-[.99]"
+        style={{ background: "var(--bn-accent)", color: "var(--bn-accent-ink)" }}
+      >
+        {coolLeft > 0 && verdict?.kind !== "yes" ? `BINGO (${coolLeft}s)` : plainBangs("BINGO!")}
+      </button>
+      {iWon ? (
+        <p className="text-center font-bold text-lg" role="status" style={{ color: "var(--bn-accent)" }}>
+          Confirmed! You&apos;re a winner.{game.winnerMessage && <span className="block text-base">{game.winnerMessage}</span>}
+        </p>
+      ) : (
+        verdict && (
+          <p className="text-center font-bold text-lg" role="status" style={{ color: verdict.kind === "yes" ? "var(--bn-accent)" : undefined }}>
+            {verdict.text}
+          </p>
+        )
+      )}
+      {round?.status !== "live" && !iWon && <p className="text-center text-xs opacity-80">The BINGO button works while a round is being played.</p>}
+    </>
+  );
+
+  const closedBox = round?.status === "closed" && (
+    <p className="text-center rounded-xl p-3" style={{ background: "rgba(0,0,0,.22)" }}>
+      Round {round.number} is over{round.winners.length ? `. Winner${round.winners.length > 1 ? "s" : ""}: ${round.winners.map((w) => w.rsn).join(", ")}` : ""}. Waiting for the next round…
+    </p>
+  );
+
+  const calledList = calls.length > 0 && (
+    <section>
+      <p className="text-xs uppercase tracking-widest opacity-80 mb-1.5">Called so far</p>
+      <div className={`flex flex-wrap gap-1.5 ${wide ? "max-h-[32vh] overflow-y-auto pr-1" : ""}`}>
+        {[...calls].reverse().map((v, i) => (
+          <span key={v} className="px-2 py-0.5 rounded text-sm font-bold inline-flex items-center gap-1" style={i === 0 ? { background: "var(--bn-accent)", color: "var(--bn-accent-ink)" } : { background: "rgba(0,0,0,.25)" }}>
+            <WikiIcon src={icons?.[v]} size="1.1rem" />
+            {safeLabel(config, v)}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+
+  const pastBox = state.pastWinners.length > 0 && (
+    <p className="text-xs opacity-80 text-center">
+      Earlier winners: {state.pastWinners.map((w) => `Round ${w.round}: ${w.rsn}`).join(" · ")}
+    </p>
+  );
+
+  // Wide screens with a card: card on the left, everything else beside it, so nothing needs scrolling.
+  if (wide && card) {
+    return wrap(
+      <div className="mx-auto space-y-4">
+        {header}
+        <div className="flex gap-8 items-start justify-center">
+          <div className="space-y-2 flex-1 min-w-0" style={{ maxWidth: "min(640px, calc((100vh - 220px) / 1.13))" }}>
+            {nameRow}
+            {cardView}
+          </div>
+          <div className="w-[380px] shrink-0 space-y-4 sticky top-24">
+            {roundBox}
+            {winBox}
+            {swapBox}
+            {claimBox}
+            {closedBox}
+            {calledList}
+            {pastBox}
+          </div>
+        </div>
+      </div>,
+    );
+  }
+
   return wrap(
     <div className="max-w-xl mx-auto space-y-4">
-      <header className="text-center">
-        <h1 className="font-display text-3xl sm:text-4xl" style={{ color: "var(--bn-accent)" }}>
-          {plainBangs(game.name)}
-        </h1>
-        {offline && <p className="text-sm mt-1 opacity-90">Reconnecting…</p>}
-      </header>
-
-      {/* Round, pattern and the latest call */}
-      <section className="rounded-xl p-3 flex items-center gap-3" style={{ background: "rgba(0,0,0,.22)" }}>
-        {round ? (
-          <>
-            <PatternPicture pattern={round.pattern} size={52} />
-            <div className="min-w-0 flex-1">
-              <p className="text-xs uppercase tracking-widest opacity-80">
-                Round {round.number} · {round.status === "open" ? "starting soon" : round.status === "live" ? "playing" : "over"}
-              </p>
-              <p className="font-bold text-lg leading-tight">{patternName(round.pattern)}</p>
-              <p className="text-xs opacity-80">{patternDescription(round.pattern)}</p>
-            </div>
-            <div className="text-right shrink-0">
-              <p className="text-[11px] uppercase tracking-widest opacity-80">Last call</p>
-              <p className="font-display font-bold leading-none flex items-center justify-end gap-1.5" style={{ color: "var(--bn-accent)", fontSize: lastCall && lastCall.length > 8 ? "1.15rem" : "2.1rem" }} aria-live="polite">
-                <WikiIcon src={lastIcon} size="1.6rem" />
-                {lastCall ?? "–"}
-              </p>
-              <p className="text-[11px] opacity-80">{calls.length} called</p>
-            </div>
-          </>
-        ) : (
-          <p className="text-center w-full py-2">Get your card. The first round starts soon.</p>
-        )}
-      </section>
-
-      {iWon && (
-        <div className="rounded-xl p-4 text-center font-bold text-lg" style={{ background: "var(--bn-accent)", color: "var(--bn-accent-ink)" }} role="status">
-          🎉 You won round {round?.number}!{game.winnerMessage && <span className="block text-base font-semibold mt-1">{game.winnerMessage}</span>}
-        </div>
-      )}
-
-      {!card ? (
-        cardLoaded === game.id && (
-          <form
-            className="rounded-xl p-4 space-y-3"
-            style={{ background: "var(--bn-panel)", color: "var(--bn-ink)" }}
-            onSubmit={(e) => {
-              e.preventDefault();
-              void join();
-            }}
-          >
-            <label className="block font-bold" htmlFor="bn-rsn">
-              Your RSN
-            </label>
-            <input
-              id="bn-rsn"
-              value={rsn}
-              onChange={(e) => setRsn(e.target.value)}
-              maxLength={12}
-              autoComplete="nickname"
-              className="w-full px-3 py-3 rounded-md border text-lg"
-              style={{ borderColor: "var(--bn-head)", background: "#fff", color: "var(--bn-ink)" }}
-              placeholder="e.g. Gn0me Vlad"
-            />
-            <button type="submit" disabled={busy || !rsn.trim()} className="w-full py-3 rounded-md font-bold text-lg disabled:opacity-60" style={{ background: "var(--bn-hit)", color: "var(--bn-hit-ink)" }}>
-              {busy ? "Making your card…" : "Get my card"}
-            </button>
-            {error && <p className="text-sm font-semibold text-red-700">{error}</p>}
-          </form>
-        )
-      ) : (
-        <>
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-bold">
-              {card.rsn}
-              {card.member && (
-                <span className="ml-2 text-[11px] px-2 py-0.5 rounded-full align-middle" style={{ background: "var(--bn-accent)", color: "var(--bn-accent-ink)" }}>
-                  Gn0me Home
-                </span>
-              )}
-            </span>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={autoMark} onChange={(e) => setAuto(e.target.checked)} className="w-4 h-4" />
-              Auto-mark
-            </label>
-          </div>
-
-          <BingoCard squares={card.squares} config={config} marked={marked} called={called} onTap={tap} icons={icons} />
-
-          {showSwap && (
-            <div className="rounded-xl p-3 text-center space-y-2" style={{ background: "rgba(0,0,0,.22)" }}>
-              <p className="text-sm">{round ? `Round ${round.number} is about to start. Happy with your card?` : "Not keen on this card? You can swap it until the round starts."}</p>
-              <div className="flex gap-2 justify-center">
-                <button type="button" onClick={() => setKeptForRound(round?.id ?? "none")} className="px-4 py-2 rounded-md font-bold" style={{ background: "var(--bn-panel)", color: "var(--bn-ink)" }}>
-                  Keep my card
-                </button>
-                <button type="button" onClick={swap} disabled={busy} className="px-4 py-2 rounded-md font-bold disabled:opacity-60" style={{ background: "var(--bn-accent)", color: "var(--bn-accent-ink)" }}>
-                  {busy ? "Swapping…" : "Get a new card"}
-                </button>
-              </div>
-            </div>
-          )}
-          {error && <p className="text-sm font-semibold text-center">{error}</p>}
-
-          <button
-            type="button"
-            onClick={claim}
-            disabled={round?.status !== "live" || coolLeft > 0 || iWon}
-            className="w-full py-4 rounded-xl font-display font-bold text-3xl tracking-widest disabled:opacity-50 shadow-lg active:scale-[.99]"
-            style={{ background: "var(--bn-accent)", color: "var(--bn-accent-ink)" }}
-          >
-            {coolLeft > 0 && verdict?.kind !== "yes" ? `BINGO (${coolLeft}s)` : plainBangs("BINGO!")}
-          </button>
-          {iWon ? (
-            <p className="text-center font-bold text-lg" role="status" style={{ color: "var(--bn-accent)" }}>
-              Confirmed! You&apos;re a winner.{game.winnerMessage && <span className="block text-base">{game.winnerMessage}</span>}
-            </p>
-          ) : (
-            verdict && (
-              <p className="text-center font-bold text-lg" role="status" style={{ color: verdict.kind === "yes" ? "var(--bn-accent)" : undefined }}>
-                {verdict.text}
-              </p>
-            )
-          )}
-          {round?.status !== "live" && !iWon && <p className="text-center text-xs opacity-80">The BINGO button works while a round is being played.</p>}
-        </>
-      )}
-
-      {round?.status === "closed" && (
-        <p className="text-center rounded-xl p-3" style={{ background: "rgba(0,0,0,.22)" }}>
-          Round {round.number} is over{round.winners.length ? `. Winner${round.winners.length > 1 ? "s" : ""}: ${round.winners.map((w) => w.rsn).join(", ")}` : ""}. Waiting for the next round…
-        </p>
-      )}
-
-      {calls.length > 0 && (
-        <section>
-          <p className="text-xs uppercase tracking-widest opacity-80 mb-1.5">Called so far</p>
-          <div className="flex flex-wrap gap-1.5">
-            {[...calls].reverse().map((v, i) => (
-              <span key={v} className="px-2 py-0.5 rounded text-sm font-bold inline-flex items-center gap-1" style={i === 0 ? { background: "var(--bn-accent)", color: "var(--bn-accent-ink)" } : { background: "rgba(0,0,0,.25)" }}>
-                <WikiIcon src={icons?.[v]} size="1.1rem" />
-                {safeLabel(config, v)}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {state.pastWinners.length > 0 && (
-        <p className="text-xs opacity-80 text-center">
-          Earlier winners: {state.pastWinners.map((w) => `Round ${w.round}: ${w.rsn}`).join(" · ")}
-        </p>
-      )}
+      {header}
+      {roundBox}
+      {winBox}
+      {joinForm}
+      {nameRow}
+      {cardView}
+      {swapBox}
+      {claimBox}
+      {closedBox}
+      {calledList}
+      {pastBox}
     </div>,
   );
+}
+
+/** True on screens at least `px` wide (false until mounted, so phones never flash the wide layout). */
+function useWideScreen(px = 1024) {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${px}px)`);
+    const on = () => setWide(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, [px]);
+  return wide;
 }

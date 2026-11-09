@@ -39,7 +39,8 @@ export function safeLabel(config: GameConfig, v: number): string {
  */
 export function squareFont(text: string): string {
   const n = text.length;
-  const cap = n <= 3 ? "1.35rem" : n <= 6 ? "0.95rem" : n <= 10 ? "0.82rem" : n <= 14 ? "0.74rem" : "0.66rem";
+  // Caps in container units: the same sizes as before on a phone-sized card, larger on a desktop one.
+  const cap = n <= 3 ? "6cqi" : n <= 6 ? "4.3cqi" : n <= 10 ? "3.7cqi" : n <= 14 ? "3.35cqi" : "3cqi";
   const longest = Math.max(...text.split(/\s+/).map((w) => w.length), 1);
   // A square's inner width is about 20% of the grid less its gaps and padding; a bold letter is about 0.62em wide.
   return `min(${cap}, calc((20cqi - 11px) / ${(0.62 * longest).toFixed(2)}))`;

@@ -36,6 +36,17 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 9, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-09-bingo-night-desktop",
+    date: "2026-11-09",
+    kind: "improved",
+    audience: "everyone",
+    title: "Bingo Night fits on a computer screen",
+    summary:
+      "Playing Bingo Night on a laptop or desktop no longer means scrolling up and down. On wider screens the card sits on the left, with the last call, the BINGO button and everything called so far beside it, and the words on the card get bigger to fill the squares. Phones look the same as before.",
+    tryIt: ["Open gn0mehome.com/bingo-night on a computer while a game is live and get a card."],
+    links: [{ label: "Bingo Night", href: "/bingo-night" }],
+  },
+  {
     id: "2026-11-09-bingo-night-item-pictures",
     date: "2026-11-09",
     kind: "new",
