@@ -166,7 +166,7 @@ export function Navbar({ initialHiddenKeys }: NavbarProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo / Clan Name */}
           <Link href="/" className="flex items-center gap-3 group">
-            <span className="font-display text-2xl text-gold-light group-hover:text-gold transition-colors">
+            <span className="font-display text-2xl text-gold-light group-hover:text-gold transition-colors site-theme-badge">
               {CLAN_NAME}
             </span>
           </Link>

@@ -24,7 +24,7 @@ interface Respondent {
 }
 
 const inputClass = "px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
-const tooltipStyle = { backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" };
+const tooltipStyle = { backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" };
 
 function answerOf(response: SurveyResponse, question: SurveyQuestion): AnswerValue {
   return response.answers.find((a) => a.question_id === question.id)?.value ?? null;
@@ -277,7 +277,7 @@ function QuestionChart({ question, values }: { question: SurveyQuestion; values:
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#555" }} />
               <YAxis tick={{ fontSize: 10, fill: "#555" }} allowDecimals={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="count" fill="#2D5016" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" fill="var(--color-gnome-green)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -302,7 +302,7 @@ function HorizontalChart({ data }: { data: { label: string; count: number }[] })
         <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: "#555" }} />
         <YAxis type="category" dataKey="label" width={140} tick={{ fontSize: 11, fill: "#555" }} />
         <Tooltip contentStyle={tooltipStyle} />
-        <Bar dataKey="count" fill="#2D5016" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="count" fill="var(--color-gnome-green)" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

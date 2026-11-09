@@ -351,8 +351,8 @@ export default function AdminPollsPage() {
                               <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
                               <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: "#555" }} />
                               <YAxis type="category" dataKey="text" width={160} tick={{ fontSize: 11, fill: "#555" }} />
-                              <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
-                              <Bar dataKey="count" name="Votes" fill="#2D5016" radius={[0, 4, 4, 0]} />
+                              <Tooltip contentStyle={{ backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
+                              <Bar dataKey="count" name="Votes" fill="var(--color-gnome-green)" radius={[0, 4, 4, 0]} />
                             </BarChart>
                           </ResponsiveContainer>
                         )}

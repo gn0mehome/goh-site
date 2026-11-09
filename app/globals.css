@@ -1,24 +1,26 @@
 @import "tailwindcss";
+@import "./site-themes.css";
 
 /* ===== Gnome Village Theme - Tailwind v4 CSS Config ===== */
 
 @theme inline {
-  /* Core palette — WCAG AA compliant against parchment (#F5E6C8) */
-  --color-gnome-green: #2D5016;
-  --color-gnome-green-light: #3D6B1E;
-  --color-bark-brown: #3E2B1C;
-  --color-bark-brown-light: #4A3428;
-  --color-parchment: #F5E6C8;
-  --color-parchment-dark: #E8D5A8;
-  --color-gold: #9E7B15;
-  --color-gold-light: #FFD700;
-  --color-red-accent: #8B1A1A;
-  --color-iron-grey: #555555;
-  --color-text-primary: #1A1A1A;
-  --color-text-light: #F5F5F5;
+  /* Core palette: the current theme's values (app/site-themes.css). The
+     default Gn0me Home palette is WCAG AA against parchment (#F5E6C8). */
+  --color-gnome-green: var(--c-green);
+  --color-gnome-green-light: var(--c-green-light);
+  --color-bark-brown: var(--c-bark);
+  --color-bark-brown-light: var(--c-bark-light);
+  --color-parchment: var(--c-parchment);
+  --color-parchment-dark: var(--c-parchment-dark);
+  --color-gold: var(--c-gold);
+  --color-gold-light: var(--c-gold-light);
+  --color-red-accent: var(--c-red);
+  --color-iron-grey: var(--c-grey);
+  --color-text-primary: var(--c-text);
+  --color-text-light: var(--c-text-light);
 
   /* High-contrast gold for decorative/display use only */
-  --color-gold-display: #DAA520;
+  --color-gold-display: var(--c-gold-display);
 
   /* Fonts */
   --font-display: "MedievalSharp", serif;
@@ -50,15 +52,15 @@ h1, h2, h3 {
 
 /* ===== Dark Mode - "Nighttime" palette ===== */
 .dark {
-  --color-gnome-green: #6BBF3B;
-  --color-gnome-green-light: #8CD660;
-  --color-bark-brown: #d4c4a0;
-  --color-bark-brown-light: #c4b48e;
-  --color-parchment-dark: #152030;
-  --color-gold: #DAA520;
-  --color-gold-display: #DAA520;
-  --color-iron-grey: #9fb0c2;
-  --color-text-primary: #E8D5A8;
+  --color-gnome-green: var(--d-green);
+  --color-gnome-green-light: var(--d-green-light);
+  --color-bark-brown: var(--d-bark);
+  --color-bark-brown-light: var(--d-bark-light);
+  --color-parchment-dark: var(--d-surface-2);
+  --color-gold: var(--d-gold);
+  --color-gold-display: var(--d-gold);
+  --color-iron-grey: var(--d-grey);
+  --color-text-primary: var(--d-text);
 }
 
 /* Chart series colours (validated for colour-blind separation on the card
@@ -79,12 +81,12 @@ h1, h2, h3 {
   --viz-new: #a27ad6;
   --viz-easy: #f0b98c;
   --viz-hard: #a8471c;
-  --viz-surface: #1e2d40;
+  --viz-surface: var(--d-surface);
 }
 
 .dark body {
-  background-color: #1a2332;
-  color: #E8D5A8;
+  background-color: var(--d-page);
+  color: var(--d-text);
   background-image:
     radial-gradient(ellipse at 20% 50%, rgba(26, 35, 50, 0.4) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 50%, rgba(26, 35, 50, 0.3) 0%, transparent 50%),
@@ -92,8 +94,8 @@ h1, h2, h3 {
 }
 
 .dark .card-wood {
-  background-color: #1e2d40;
-  border-color: #2a3f5a;
+  background-color: var(--d-surface);
+  border-color: var(--d-border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -104,52 +106,55 @@ h1, h2, h3 {
 .dark input,
 .dark select,
 .dark textarea {
-  background-color: #1e2d40 !important;
-  border-color: #2a3f5a !important;
-  color: #E8D5A8 !important;
+  background-color: var(--d-surface) !important;
+  border-color: var(--d-border) !important;
+  color: var(--d-text) !important;
 }
 
 .dark input::placeholder,
 .dark textarea::placeholder {
-  color: #6b7f96 !important;
+  color: var(--d-placeholder) !important;
 }
 
 /* Tailwind v4 @theme inline bakes colors at compile time.
    These overrides ensure dark mode text is readable. */
-.dark .text-bark-brown { color: #d4c4a0 !important; }
-.dark .text-bark-brown-light { color: #c4b48e !important; }
-.dark .text-iron-grey { color: #9fb0c2 !important; }
-.dark .text-gnome-green { color: #6BBF3B !important; }
-.dark .text-gnome-green-light { color: #8CD660 !important; }
-.dark .text-gold { color: #DAA520 !important; }
-.dark .text-gold-display { color: #DAA520 !important; }
-.dark .text-text-primary { color: #E8D5A8 !important; }
-.dark .text-parchment { color: #F5E6C8 !important; }
-.dark .text-parchment-dark { color: #a89878 !important; }
-.dark .text-red-accent { color: #E85555 !important; }
-.dark .bg-parchment-dark { background-color: #152030 !important; }
-.dark .border-bark-brown-light { border-color: #2a3f5a !important; }
-.dark .border-parchment-dark { border-color: #233044 !important; }
+.dark .text-bark-brown { color: var(--d-bark) !important; }
+.dark .text-bark-brown-light { color: var(--d-bark-light) !important; }
+.dark .text-iron-grey { color: var(--d-grey) !important; }
+.dark .text-gnome-green { color: var(--d-green) !important; }
+.dark .text-gnome-green-light { color: var(--d-green-light) !important; }
+.dark .text-gold { color: var(--d-gold) !important; }
+.dark .text-gold-display { color: var(--d-gold) !important; }
+.dark .text-text-primary { color: var(--d-text) !important; }
+.dark .text-parchment { color: var(--d-parchment-text) !important; }
+.dark .text-parchment-dark { color: var(--d-parchment-dark-text) !important; }
+.dark .text-red-accent { color: var(--d-red) !important; }
+.dark .bg-parchment-dark { background-color: var(--d-surface-2) !important; }
+.dark .border-bark-brown-light { border-color: var(--d-border) !important; }
+.dark .border-parchment-dark { border-color: var(--d-border-2) !important; }
+/* Dark text on the bright accent (e.g. the homepage Discord button) stays dark. */
+.dark .bg-gold-light.text-bark-brown,
+.dark .bg-gold-light .text-bark-brown { color: var(--c-bark) !important; }
 
 /* Parchment surfaces and borders, including their opacity variants
    (bg-parchment/80, bg-parchment-dark/30, border-bark-brown-light/40...)
    and hover states, which the exact-class overrides above don't match --
    without these, dark mode put light text on a light card. */
 .dark .bg-parchment,
-.dark [class*="bg-parchment/"] { background-color: #1e2d40 !important; }
-.dark [class*="bg-parchment-dark/"] { background-color: rgba(21, 32, 48, 0.6) !important; }
-.dark [class*="hover:bg-parchment-dark"]:hover { background-color: #233044 !important; }
-.dark [class*="border-bark-brown-light/"] { border-color: #2a3f5a !important; }
-.dark [class*="border-parchment-dark/"] { border-color: #233044 !important; }
+.dark [class*="bg-parchment/"] { background-color: var(--d-surface) !important; }
+.dark [class*="bg-parchment-dark/"] { background-color: color-mix(in srgb, var(--d-surface-2) 60%, transparent) !important; }
+.dark [class*="hover:bg-parchment-dark"]:hover { background-color: var(--d-border-2) !important; }
+.dark [class*="border-bark-brown-light/"] { border-color: var(--d-border) !important; }
+.dark [class*="border-parchment-dark/"] { border-color: var(--d-border-2) !important; }
 
 /* Bingo tiles: the state tints are baked from the light palette, so give
    dark mode its own (components/bingo/TileFace.tsx sets data-tile-state). */
-.dark [data-tile-state="done"] { background-color: rgba(107, 191, 59, 0.16) !important; border-color: #6BBF3B !important; }
-.dark [data-tile-state="pending"] { background-color: rgba(218, 165, 32, 0.14) !important; border-color: #DAA520 !important; }
-.dark [data-tile-state="rejected"] { background-color: rgba(232, 85, 85, 0.12) !important; border-color: #E85555 !important; }
-.dark .bingo-points { background-color: rgba(232, 213, 168, 0.1) !important; }
-.dark .bingo-placeholder { color: rgba(196, 180, 142, 0.6) !important; }
-.dark .bingo-bar { background-color: #6BBF3B !important; }
+.dark [data-tile-state="done"] { background-color: color-mix(in srgb, var(--d-green) 16%, transparent) !important; border-color: var(--d-green) !important; }
+.dark [data-tile-state="pending"] { background-color: color-mix(in srgb, var(--d-gold) 14%, transparent) !important; border-color: var(--d-gold) !important; }
+.dark [data-tile-state="rejected"] { background-color: color-mix(in srgb, var(--d-red) 12%, transparent) !important; border-color: var(--d-red) !important; }
+.dark .bingo-points { background-color: color-mix(in srgb, var(--d-text) 10%, transparent) !important; }
+.dark .bingo-placeholder { color: color-mix(in srgb, var(--d-bark-light) 60%, transparent) !important; }
+.dark .bingo-bar { background-color: var(--d-green) !important; }
 
 /* ===== Ticker Animation ===== */
 @keyframes scroll {
@@ -262,12 +267,12 @@ h1, h2, h3 {
   color: var(--color-bark-brown) !important;
 }
 .dark .recharts-default-tooltip {
-  background-color: #1e2d40 !important;
-  border-color: #2a3f5a !important;
-  color: #E8D5A8;
+  background-color: var(--d-surface) !important;
+  border-color: var(--d-border) !important;
+  color: var(--d-text);
 }
 .dark .recharts-tooltip-label {
-  color: #E8D5A8;
+  color: var(--d-text);
 }
 
 /* Dashboard exports (components/admin/ExportMenu.tsx): the title bar only

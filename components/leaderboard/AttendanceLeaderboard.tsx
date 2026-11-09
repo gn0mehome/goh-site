@@ -181,11 +181,11 @@ export function AttendanceLeaderboard() {
                   />
                   <YAxis tick={{ fontSize: 10, fill: "#555" }} allowDecimals={false} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
+                    contentStyle={{ backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" }}
                     labelFormatter={(_, payload) => payload?.[0]?.payload?.title ?? ""}
                     formatter={(v) => [v, "Attendees"]}
                   />
-                  <Bar dataKey="attendee_count" fill="#2D5016" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="attendee_count" fill="var(--color-gnome-green)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}

@@ -126,8 +126,8 @@ export function GainsChart({ username }: GainsChartProps) {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#F5E6C8",
-                border: "1px solid #5C4033",
+                backgroundColor: "var(--color-parchment)",
+                border: "1px solid var(--color-bark-brown-light)",
                 borderRadius: "0.375rem",
                 fontSize: "0.8rem",
               }}
@@ -136,7 +136,7 @@ export function GainsChart({ username }: GainsChartProps) {
             <Line
               type="monotone"
               dataKey="value"
-              stroke="#2D5016"
+              stroke="var(--color-gnome-green)"
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 4, fill: "#DAA520" }}

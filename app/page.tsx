@@ -136,7 +136,7 @@ export default async function HomePage() {
     <div>
       {/* Hero Section */}
       <section className="relative bg-gnome-green overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M20%200L40%2020L20%2040L0%2020Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30" />
+        <div className="absolute inset-0 theme-banner-pattern" aria-hidden />
         {/* With SHOW_DISCORD_WIDGET on: welcome on the left and the live Discord
             widget on the right on wide screens, behind a toggle on smaller ones. */}
         <div className={`relative max-w-7xl mx-auto px-4 py-24 grid gap-10 ${widget ? "lg:py-14 lg:grid-cols-[1fr_auto] lg:items-center" : ""}`}>
@@ -153,7 +153,7 @@ export default async function HomePage() {
                 href={DISCORD_INVITE}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-md px-7 py-3 text-lg font-body font-semibold bg-gold-light text-bark-brown shadow-lg shadow-black/20 hover:bg-[#ffe34d] transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-md px-7 py-3 text-lg font-body font-semibold bg-gold-light text-bark-brown shadow-lg shadow-black/20 hover:brightness-110 transition"
               >
                 <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor" aria-hidden>
                   <path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.6 1.3a18.4 18.4 0 0 0-5.6 0L8.6 3a19.7 19.7 0 0 0-4.9 1.4C.6 9 .1 13.6.4 18.1A19.9 19.9 0 0 0 6.4 21l1.3-2a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 11.6 0l.5.4c-.6.4-1.3.7-2 1l1.3 2a19.8 19.8 0 0 0 6-3c.4-5.2-.7-9.7-3.3-13.6ZM8.3 15.3c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.1 1.1 2.1 2.4-.9 2.4-2.1 2.4Zm7.4 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Z" />
