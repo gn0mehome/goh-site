@@ -18,7 +18,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const [bundle, viewer] = await Promise.all([loadBingoBundle(supabase, id), getBingoViewer(supabase)]);
   if (!bundle || (bundle.event.status === "draft" && !viewer.isStaff)) {
-    return NextResponse.json({ error: "Bingo event not found." }, { status: 404 });
+    return NextResponse.json({ error: "Clan Bingo event not found." }, { status: 404 });
   }
   const { event, teams, tiles, progress } = bundle;
 

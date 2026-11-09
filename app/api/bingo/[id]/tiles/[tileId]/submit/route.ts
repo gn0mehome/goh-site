@@ -12,7 +12,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!viewer.userId) return NextResponse.json({ error: "Sign in to submit proof." }, { status: 401 });
 
   const bundle = await loadBingoBundle(supabase, id);
-  if (!bundle || bundle.event.status === "draft") return NextResponse.json({ error: "Bingo event not found." }, { status: 404 });
+  if (!bundle || bundle.event.status === "draft") return NextResponse.json({ error: "Clan Bingo event not found." }, { status: 404 });
   const mine = findTeamFor(bundle.teams, viewer.rsns);
   if (!mine) return NextResponse.json({ error: "You aren't on a team for this bingo. Ask staff if that's a mistake." }, { status: 403 });
 

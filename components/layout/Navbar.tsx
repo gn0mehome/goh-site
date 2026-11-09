@@ -34,7 +34,7 @@ const NAV_ITEMS: NavItem[] = [
     items: [
       { href: "/events", label: "Calendar", sectionKey: "events" },
       { href: "/contests", label: "Contests", sectionKey: "activities" },
-      { href: "/bingo", label: "Bingo", sectionKey: "bingo" },
+      { href: "/bingo", label: "Clan Bingo", sectionKey: "bingo" },
       { href: "/bingo-night", label: "Bingo Night", sectionKey: "bingo_night" },
       { href: "/competitions", label: "WOM Competitions", sectionKey: "competitions" },
       { href: "/hiscores", label: "Hiscores", sectionKey: "hiscores" },

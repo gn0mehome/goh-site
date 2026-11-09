@@ -9,7 +9,7 @@ async function guard(id: string) {
   const supabase = bingoServiceClient();
   if (!supabase) return { error: NextResponse.json({ error: "Supabase not configured" }, { status: 503 }) };
   const { data: event } = await supabase.from("bingo_events").select("id, grid_size, status").eq("id", id).maybeSingle();
-  if (!event) return { error: NextResponse.json({ error: "Bingo event not found." }, { status: 404 }) };
+  if (!event) return { error: NextResponse.json({ error: "Clan Bingo event not found." }, { status: 404 }) };
   return { supabase, event };
 }
 

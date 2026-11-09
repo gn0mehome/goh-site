@@ -7,7 +7,7 @@ async function context(id: string) {
   const viewer = await getBingoViewer(supabase);
   if (!viewer.userId) return { error: NextResponse.json({ error: "Sign in to join." }, { status: 401 }) };
   const { data: event } = await supabase.from("bingo_events").select("id, status").eq("id", id).maybeSingle();
-  if (!event || event.status === "draft") return { error: NextResponse.json({ error: "Bingo event not found." }, { status: 404 }) };
+  if (!event || event.status === "draft") return { error: NextResponse.json({ error: "Clan Bingo event not found." }, { status: 404 }) };
   if (event.status !== "signups") return { error: NextResponse.json({ error: "Sign-ups for this bingo are closed." }, { status: 400 }) };
   return { supabase, viewer };
 }

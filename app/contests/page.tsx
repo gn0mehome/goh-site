@@ -9,7 +9,7 @@ import { eventQuests, type QuestEvent } from "@/lib/quests";
 
 export const metadata: Metadata = {
   title: "Contests",
-  description: "Clan-run contests to take part in: team bingos, quest races and art contests, live and coming up.",
+  description: "Clan-run contests to take part in: clan bingos, quest races and art contests, live and coming up.",
 };
 
 export const dynamic = "force-dynamic"; // gated per-viewer, can't be statically cached
@@ -34,7 +34,7 @@ interface Activity {
 }
 
 const KIND_LABEL: Record<Kind, { label: string; icon: string; tint: string }> = {
-  bingo: { label: "Bingo", icon: "🎯", tint: "bg-[#2E64A8]/10 text-[#2E64A8]" },
+  bingo: { label: "Clan Bingo", icon: "🎯", tint: "bg-[#2E64A8]/10 text-[#2E64A8]" },
   quests: { label: "Quest event", icon: "📜", tint: "bg-[#B5862A]/15 text-[#8a6418]" },
   art: { label: "Art contest", icon: "🎨", tint: "bg-[#C2577E]/15 text-[#A23F66]" },
 };
@@ -195,7 +195,7 @@ export default async function ContestsPage() {
       <header className="max-w-3xl">
         <h1 className="font-display text-4xl sm:text-5xl text-gnome-green">Contests</h1>
         <p className="text-bark-brown-light mt-2">
-          Clan-run contests you can jump into: team bingos, quest races and art contests. Join from the contest&apos;s page, then check back here to see what&apos;s next.
+          Clan-run contests you can jump into: clan bingos, quest races and art contests. Join from the contest&apos;s page, then check back here to see what&apos;s next.
           {competition && (
             <>
               {" "}
@@ -267,7 +267,7 @@ export default async function ContestsPage() {
             Older ones:{" "}
             {bingo && (
               <Link href="/bingo" className="text-gnome-green hover:underline">
-                past bingos
+                past clan bingos
               </Link>
             )}
             {bingo && art && " · "}

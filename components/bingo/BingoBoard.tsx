@@ -195,7 +195,7 @@ export function BingoBoard({ eventId }: { eventId: string }) {
       <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-3">
         <p className="text-bark-brown">This bingo isn&apos;t available.</p>
         <Link href="/bingo" className="text-gnome-green hover:underline">
-          See all bingos
+          See all clan bingos
         </Link>
       </div>
     );
@@ -254,7 +254,7 @@ export function BingoBoard({ eventId }: { eventId: string }) {
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
       <Confetti fire={confetti} />
       <Link href="/bingo" className="text-sm text-gnome-green hover:underline">
-        ← All bingos
+        ← All clan bingos
       </Link>
 
       {event.banner_url && (
@@ -328,7 +328,7 @@ export function BingoBoard({ eventId }: { eventId: string }) {
         </Card>
       ) : (
         <>
-          <nav className="flex gap-1 border-b border-bark-brown-light/30 overflow-x-auto" aria-label="Bingo sections">
+          <nav className="flex gap-1 border-b border-bark-brown-light/30 overflow-x-auto" aria-label="Clan Bingo sections">
             {tabs
               .filter((t) => !t.hidden)
               .map((t) => (

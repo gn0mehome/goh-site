@@ -50,7 +50,7 @@ function Outcomes({ outcomes }: { outcomes: FeedOutcome[] }) {
           </span>
           <span className="text-bark-brown-light">
             {" "}
-            · {o.target === "bingo" ? "Bingo" : "Quest event"} {o.eventName}
+            · {o.target === "bingo" ? "Clan Bingo" : "Quest event"} {o.eventName}
             {o.tileTitle && ` › ${o.tileTitle}`}
           </span>
         </li>
