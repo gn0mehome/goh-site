@@ -85,7 +85,7 @@ export function BingoNightDisplay() {
   const wordCols = words.length <= 40 ? 4 : words.length <= 70 ? 5 : 6;
 
   return stage(
-    <div className="h-full grid" style={{ gridTemplateColumns: "640px 1fr", gap: 40, padding: 48 }}>
+    <div className="h-full grid" style={{ gridTemplateColumns: "640px 1fr", gridTemplateRows: "minmax(0, 1fr)", gap: 40, padding: 48 }}>
       {/* Left: game, round, latest call, last five */}
       <div className="flex flex-col" style={{ gap: 28 }}>
         <div>
@@ -126,12 +126,12 @@ export function BingoNightDisplay() {
 
         <div>
           <p style={{ fontSize: 28, opacity: 0.85, marginBottom: 10 }}>Last 5 calls</p>
-          <div className="flex" style={{ gap: 12 }}>
+          <div className="flex flex-wrap" style={{ gap: 10 }}>
             {calls
               .slice(-6, -1)
               .reverse()
               .map((v) => (
-                <span key={v} className="rounded-xl font-bold text-center" style={{ fontSize: config.mode === "words" ? 28 : 40, padding: "8px 14px", background: "rgba(0,0,0,.3)", minWidth: 100 }}>
+                <span key={v} className="rounded-xl font-bold text-center" style={{ fontSize: config.mode === "words" ? 28 : 40, padding: config.mode === "words" ? "6px 14px" : "8px 14px", background: "rgba(0,0,0,.3)", minWidth: 100, whiteSpace: "nowrap" }}>
                   {safeLabel(config, v)}
                 </span>
               ))}
@@ -140,8 +140,8 @@ export function BingoNightDisplay() {
       </div>
 
       {/* Right: the flashboard */}
-      <div className="flex flex-col" style={{ gap: 24 }}>
-        <div className="flex-1 rounded-3xl" style={{ padding: 28, background: "rgba(0,0,0,.28)" }}>
+      <div className="flex flex-col min-h-0" style={{ gap: 24 }}>
+        <div className="flex-1 min-h-0 rounded-3xl overflow-hidden" style={{ padding: 28, background: "rgba(0,0,0,.28)" }}>
           {config.mode === "numbers" ? (
             <div className="h-full flex flex-col justify-between">
               {COLUMNS.map((letter, c) => (
@@ -171,7 +171,7 @@ export function BingoNightDisplay() {
               ))}
             </div>
           ) : (
-            <div className="h-full grid content-start" style={{ gridTemplateColumns: `repeat(${wordCols}, 1fr)`, gap: 10 }}>
+            <div className="h-full grid" style={{ gridTemplateColumns: `repeat(${wordCols}, 1fr)`, gridTemplateRows: `repeat(${Math.ceil(words.length / wordCols)}, minmax(0, 1fr))`, gap: 10 }}>
               {words.map((w, i) => {
                 const on = called.has(i);
                 return (
@@ -180,8 +180,7 @@ export function BingoNightDisplay() {
                     className="rounded-lg font-bold text-center flex items-center justify-center leading-tight"
                     style={{
                       fontSize: wordFont,
-                      padding: "8px 6px",
-                      minHeight: wordFont * 2.3,
+                      padding: "4px 6px",
                       background: i === last ? "var(--bn-accent)" : on ? "var(--bn-hit)" : "rgba(255,255,255,.08)",
                       color: i === last ? "var(--bn-accent-ink)" : on ? "var(--bn-hit-ink)" : "rgba(255,255,255,.4)",
                     }}

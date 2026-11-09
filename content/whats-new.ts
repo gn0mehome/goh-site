@@ -36,6 +36,17 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 9, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-09-bingo-night-stream-words-fit",
+    date: "2026-11-09",
+    kind: "fixed",
+    audience: "staff",
+    title: "Bingo Night stream view fits word games",
+    summary:
+      "On the Bingo Night stream view, word games with a long list pushed the QR code and \"Scan or go to\" line off the bottom of the screen, and long words ran into each other under Last 5 calls. The word board now shrinks to fit, and the last calls wrap onto a second line.",
+    tryIt: ["Launch a word game, open the stream view from the host console and draw a few calls: the QR code stays in the bottom corner."],
+    links: [{ label: "Bingo Night (host)", href: "/admin/bingo-night" }],
+  },
+  {
     id: "2026-11-09-clan-bingo-rename",
     date: "2026-11-09",
     kind: "improved",
