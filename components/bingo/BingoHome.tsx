@@ -197,7 +197,7 @@ export function BingoHome() {
 
       {finished.length > 0 && (
         <section className="space-y-3">
-          <h2 className="font-display text-2xl text-bark-brown">Past bingos</h2>
+          <h2 className="font-display text-2xl text-bark-brown">Past clan bingos</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {finished.map((e) => {
               const winner = e.standings[0];

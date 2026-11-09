@@ -217,7 +217,7 @@ export function FeedLog({ sources, refreshKey }: { sources: { id: string; name: 
                                 <ul className="space-y-0.5">
                                   {m.outcomes.map((o, i) => (
                                     <li key={i} className="text-xs text-bark-brown-light">
-                                      <span className="font-semibold text-bark-brown">{o.result === "queued" ? "Sent for review" : o.result.charAt(0).toUpperCase() + o.result.slice(1)}</span> · {o.target === "bingo" ? "Bingo" : "Quest event"} {o.eventName}
+                                      <span className="font-semibold text-bark-brown">{o.result === "queued" ? "Sent for review" : o.result.charAt(0).toUpperCase() + o.result.slice(1)}</span> · {o.target === "bingo" ? "Clan Bingo" : "Quest event"} {o.eventName}
                                       {o.tileTitle && ` › ${o.tileTitle}`}
                                     </li>
                                   ))}

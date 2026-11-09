@@ -58,7 +58,7 @@ export default function BingoAdminListPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl text-gnome-green">Bingo</h1>
+          <h1 className="font-display text-3xl text-gnome-green">Clan Bingo</h1>
           <p className="text-bark-brown-light">Build boards, put teams together and review proof.</p>
         </div>
         <div className="flex gap-2">
@@ -77,7 +77,7 @@ export default function BingoAdminListPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label htmlFor="bingo-name" className="block text-sm font-semibold text-bark-brown mb-1">Name</label>
-              <input id="bingo-name" value={name} maxLength={100} onChange={(e) => setName(e.target.value)} className={inputClass} placeholder="e.g. Winter Bingo 2026" autoFocus />
+              <input id="bingo-name" value={name} maxLength={100} onChange={(e) => setName(e.target.value)} className={inputClass} placeholder="e.g. Winter Clan Bingo 2026" autoFocus />
             </div>
             {(events ?? []).length > 0 && (
               <div>
@@ -112,7 +112,7 @@ export default function BingoAdminListPage() {
         <p className="text-sm text-iron-grey">Loading...</p>
       ) : events.length === 0 ? (
         <Card hover={false} className="text-center py-10 space-y-2">
-          <p className="text-bark-brown">No bingos yet.</p>
+          <p className="text-bark-brown">No clan bingos yet.</p>
           <p className="text-sm text-iron-grey">Press &quot;New bingo&quot; to build your first board. It stays a private draft until you open sign-ups or go live.</p>
         </Card>
       ) : (

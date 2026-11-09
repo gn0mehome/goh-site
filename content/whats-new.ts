@@ -36,6 +36,23 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 9, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-09-clan-bingo-rename",
+    date: "2026-11-09",
+    kind: "improved",
+    audience: "everyone",
+    title: "Bingo is now called Clan Bingo",
+    summary:
+      "With Bingo Night added, the team bingo boards are now called Clan Bingo everywhere, so the two are easy to tell apart. Clan Bingo is the team board game with tiles, sign-ups and screenshots; Bingo Night is the live call-and-mark game anyone can play. Nothing else changed, and the addresses are the same.",
+    tryIt: [
+      "Open the Events menu: Clan Bingo and Bingo Night sit side by side.",
+      "In the admin, Clan Bingo is under Competitions and Clan Bingo Submissions is under Review Queue.",
+    ],
+    links: [
+      { label: "Clan Bingo", href: "/bingo" },
+      { label: "Bingo Night", href: "/bingo-night" },
+    ],
+  },
+  {
     id: "2026-11-09-bingo-night",
     date: "2026-11-09",
     kind: "new",
@@ -376,7 +393,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     ],
     links: [
       { label: "Admin › Clan Feed", href: "/admin/clan-feed" },
-      { label: "Admin › Bingo", href: "/admin/bingo" },
+      { label: "Admin › Clan Bingo", href: "/admin/bingo" },
     ],
   },
   // ── October 20, 2026 ──────────────────────────────────────────────
@@ -471,8 +488,8 @@ export const WHATS_NEW: WhatsNewEntry[] = [
       "On Launch, check the list and press Go live when it's ready.",
     ],
     links: [
-      { label: "Admin › Bingo", href: "/admin/bingo" },
-      { label: "Bingo submissions", href: "/admin/bingo/submissions" },
+      { label: "Admin › Clan Bingo", href: "/admin/bingo" },
+      { label: "Clan Bingo submissions", href: "/admin/bingo/submissions" },
     ],
   },
   {
@@ -488,7 +505,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
       "When a bingo has sign-ups open, press Join this bingo.",
       "Once it's live, tap a tile on your board and paste a screenshot with Ctrl+V.",
     ],
-    links: [{ label: "Bingo", href: "/bingo" }],
+    links: [{ label: "Clan Bingo", href: "/bingo" }],
   },
   // ── October 18, 2026 ──────────────────────────────────────────────
   {

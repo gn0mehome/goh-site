@@ -130,8 +130,8 @@ function ReviewQueue() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link href="/admin/bingo" className="text-xs text-gnome-green hover:underline">← All bingos</Link>
-          <h1 className="font-display text-3xl text-gnome-green">Bingo submissions</h1>
+          <Link href="/admin/bingo" className="text-xs text-gnome-green hover:underline">← All clan bingos</Link>
+          <h1 className="font-display text-3xl text-gnome-green">Clan Bingo submissions</h1>
           <p className="text-bark-brown-light text-sm">
             {eventId && subs?.[0]?.bingo_events ? `${subs[0].bingo_events.name} only · ` : ""}
             {status === "pending" ? "Oldest first. Keys: A approve, S send back, J/K next and previous." : "Newest first."}

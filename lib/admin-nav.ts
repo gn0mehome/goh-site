@@ -32,7 +32,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
 
   { href: "/admin/wom-competitions", label: "WOM Competitions", group: "Competitions", permission: "manage_competitions" },
   { href: "/admin/weekly-competition", label: "Weekly SOTW/BotW", group: "Competitions", permission: "manage_competitions" },
-  { href: "/admin/bingo", label: "Bingo", group: "Competitions", permission: "manage_bingo" },
+  { href: "/admin/bingo", label: "Clan Bingo", group: "Competitions", permission: "manage_bingo" },
   { href: "/admin/quests", label: "Quest Events", group: "Competitions", permission: "manage_quests" },
   { href: "/admin/art", label: "Art Contests", group: "Competitions", permission: "manage_art", badge: "art_entries" },
   { href: "/admin/payouts", label: "Prize Payouts", group: "Competitions", permission: "manage_payouts", badge: "unpaid_payouts" },
@@ -43,7 +43,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/gnomie-reviews", label: "Gn0mie Shoutouts", group: "Review Queue", permission: "manage_gnomie_reviews", badge: "gnomie_reviews" },
   { href: "/admin/testimonials", label: "Testimonials", group: "Review Queue", permission: "manage_testimonials", badge: "testimonials" },
   { href: "/admin/rsn-links", label: "RSN Links", group: "Review Queue", permission: "manage_rsn_links", badge: "rsn_requests" },
-  { href: "/admin/bingo/submissions", label: "Bingo Submissions", group: "Review Queue", permission: "manage_bingo", badge: "bingo_submissions" },
+  { href: "/admin/bingo/submissions", label: "Clan Bingo Submissions", group: "Review Queue", permission: "manage_bingo", badge: "bingo_submissions" },
   { href: "/admin/quests/submissions", label: "Quest Screenshots", group: "Review Queue", permission: "manage_quests", badge: "quest_submissions" },
 
   { href: "/admin/gn0mebook", label: "Gn0meBook Profiles", group: "Members", permission: "manage_member_profiles" },
@@ -70,7 +70,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
 /**
  * The nav item a pathname belongs to: the longest href (or alsoActiveOn
  * path) that equals it or is a parent of it -- so /admin/events/123/edit
- * highlights Events, /admin/bingo/submissions highlights Bingo Submissions
+ * highlights Events, /admin/bingo/submissions highlights Clan Bingo Submissions
  * rather than Bingo, and /admin itself only matches Dashboard exactly.
  */
 export function activeNavHref(pathname: string, items: Pick<AdminNavItem, "href" | "alsoActiveOn">[]): string | null {

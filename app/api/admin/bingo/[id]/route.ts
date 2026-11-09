@@ -24,7 +24,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const { supabase } = ctx;
 
   const bundle = await loadBingoBundle(supabase, id);
-  if (!bundle) return NextResponse.json({ error: "Bingo event not found." }, { status: 404 });
+  if (!bundle) return NextResponse.json({ error: "Clan Bingo event not found." }, { status: 404 });
 
   const { data: signups } = await supabase.from("bingo_signups").select("user_id, rsn, note, created_at").eq("event_id", id).order("created_at");
   const onTeam = new Set(bundle.teams.flatMap((t) => t.members.map((m) => normalizeRsn(m.rsn))));
@@ -49,7 +49,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { supabase } = ctx;
 
   const bundle = await loadBingoBundle(supabase, id);
-  if (!bundle) return NextResponse.json({ error: "Bingo event not found." }, { status: 404 });
+  if (!bundle) return NextResponse.json({ error: "Clan Bingo event not found." }, { status: 404 });
   const body = await request.json().catch(() => ({}));
   const update: Record<string, unknown> = {};
 

@@ -81,7 +81,7 @@ export function BingoBuilder({ id }: { id: string }) {
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <Link href="/admin/bingo" className="text-xs text-gnome-green hover:underline">← All bingos</Link>
+          <Link href="/admin/bingo" className="text-xs text-gnome-green hover:underline">← All clan bingos</Link>
           <h1 className="font-display text-3xl text-gnome-green break-words">{event.name}</h1>
           <div className="flex flex-wrap items-center gap-2 mt-1 text-xs">
             <span className={`px-2 py-0.5 rounded-full font-semibold ${STATUS_CHIP[event.status]}`}>{STATUS_LABELS[event.status]}</span>
@@ -100,7 +100,7 @@ export function BingoBuilder({ id }: { id: string }) {
         </Link>
       </div>
 
-      <nav className="flex flex-wrap gap-1.5" aria-label="Bingo setup steps">
+      <nav className="flex flex-wrap gap-1.5" aria-label="Clan Bingo setup steps">
         {STEPS.map((s, i) => (
           <button
             key={s.key}

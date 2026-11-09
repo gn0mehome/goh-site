@@ -55,7 +55,7 @@ export default async function CompetitionsPage() {
         {showContests && (
           <>
             {" "}
-            Looking for bingos, quest races or art contests? They&apos;re on{" "}
+            Looking for clan bingos, quest races or art contests? They&apos;re on{" "}
             <Link href="/contests" className="text-gnome-green hover:text-gnome-green-light underline">
               Contests
             </Link>
