@@ -362,6 +362,8 @@ export interface CreateCompetitionResult {
 export async function createWomCompetition(payload: {
   title: string;
   metric: string;
+  /** Several skills/bosses at once (WOM ranks by the combined total); takes precedence over `metric`. */
+  metrics?: string[];
   startsAt: string;
   endsAt: string;
   groupId?: number;
@@ -423,7 +425,7 @@ export async function deleteWomCompetition(womId: number, verificationCode: stri
  */
 export async function editWomCompetition(
   womId: number,
-  payload: { title?: string; metric?: string; startsAt?: Date; endsAt?: Date; participants?: string[]; teams?: { name: string; participants: string[] }[] },
+  payload: { title?: string; metric?: string; metrics?: string[]; startsAt?: Date; endsAt?: Date; participants?: string[]; teams?: { name: string; participants: string[] }[] },
   verificationCode: string
 ) {
   return womClient.competitions.editCompetition(womId, payload as never, verificationCode);

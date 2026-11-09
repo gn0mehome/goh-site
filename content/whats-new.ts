@@ -36,6 +36,20 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 9, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-09-multi-metric-competitions",
+    date: "2026-11-09",
+    kind: "new",
+    audience: "staff",
+    title: "Competitions can track more than one skill or boss",
+    summary:
+      "Like on Wise Old Man, a competition can now cover several skills or bosses at once, for example a Boss of the Week for Vorkath and Zulrah. Everyone is ranked by their combined total across all of them. In the WOM Competitions maker, pick the first skill or boss as usual, then use \"+ Add another\" for more. Skill and Boss of the Week titles list them all (\"Boss of the Week | 11/15 | Vorkath & Zulrah\"). You can also add or remove them later under Manage on an existing competition.",
+    tryIt: [
+      "Open Competitions › WOM Competitions and choose Boss of the Week.",
+      "Under Boss, click \"+ Add another boss\" and pick a second boss. The title updates to include both.",
+    ],
+    links: [{ label: "WOM Competitions", href: "/admin/wom-competitions" }],
+  },
+  {
     id: "2026-11-09-no-auto-host",
     date: "2026-11-09",
     kind: "fixed",

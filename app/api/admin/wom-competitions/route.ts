@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { SKILLS, BOSSES, ACTIVITIES, COMPUTED_METRICS } from "@wise-old-man/utils";
 import { checkPermission } from "@/lib/check-permission";
 import { createWomCompetition } from "@/lib/wom";
 import { postToDestination } from "@/lib/discord";
 import { getAlertChannel } from "@/lib/alert-channels";
 import { WOM_GROUP_ID } from "@/lib/constants";
+import { parseMetrics, womMetricFields } from "@/lib/competition-metrics";
+import { MetricProps } from "@wise-old-man/utils";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,7 +15,6 @@ function getServiceClient() {
   return createClient(url, key);
 }
 
-const VALID_METRICS = new Set<string>([...SKILLS, ...BOSSES, ...ACTIVITIES, ...COMPUTED_METRICS]);
 const MAX_TITLE_LENGTH = 100;
 
 // GET - list competitions created from this site. Never returns
@@ -28,7 +28,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("wom_competitions")
-    .select("id, wom_id, title, metric, type, starts_at, ends_at, group_linked, participants, teams, payout_winner_count, created_by, created_at")
+    .select("id, wom_id, title, metric, metrics, type, starts_at, ends_at, group_linked, participants, teams, payout_winner_count, created_by, created_at")
     .order("starts_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: "Failed to load competitions." }, { status: 500 });
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
 
   const title = typeof body.title === "string" ? body.title.trim().slice(0, MAX_TITLE_LENGTH) : "";
-  const metric = typeof body.metric === "string" ? body.metric : "";
+  const parsed = parseMetrics(body);
   const startsAt = typeof body.startsAt === "string" ? body.startsAt : "";
   const endsAt = typeof body.endsAt === "string" ? body.endsAt : "";
   const participantMode = body.participantMode;
@@ -59,7 +59,10 @@ export async function POST(request: NextRequest) {
   const payoutWinnerCount = Number.isInteger(body.payoutWinnerCount) ? Math.max(0, Math.min(20, body.payoutWinnerCount)) : 10;
 
   if (!title) return NextResponse.json({ error: "Title is required." }, { status: 400 });
-  if (!VALID_METRICS.has(metric)) return NextResponse.json({ error: "Invalid metric." }, { status: 400 });
+  if (!parsed) return NextResponse.json({ error: "Pick at least one skill or boss." }, { status: 400 });
+  if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  const metrics = parsed.metrics;
+  const metricFields = womMetricFields(metrics);
   if (!startsAt || !endsAt || Number.isNaN(Date.parse(startsAt)) || Number.isNaN(Date.parse(endsAt))) {
     return NextResponse.json({ error: "Valid start and end times are required." }, { status: 400 });
   }
@@ -82,7 +85,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    createPayload = { title, metric, startsAt, endsAt, groupId: WOM_GROUP_ID, groupVerificationCode };
+    createPayload = { title, ...metricFields, startsAt, endsAt, groupId: WOM_GROUP_ID, groupVerificationCode };
     type = "classic";
     groupLinked = true;
   } else if (participantMode === "participants") {
@@ -92,7 +95,7 @@ export async function POST(request: NextRequest) {
     if (participants.length === 0) {
       return NextResponse.json({ error: "Add at least one participant." }, { status: 400 });
     }
-    createPayload = { title, metric, startsAt, endsAt, participants };
+    createPayload = { title, ...metricFields, startsAt, endsAt, participants };
     type = "classic";
     participantsToStore = participants;
   } else if (participantMode === "teams") {
@@ -109,7 +112,7 @@ export async function POST(request: NextRequest) {
     if (teams.length < 2) {
       return NextResponse.json({ error: "Add at least two teams, each with a name and at least one participant." }, { status: 400 });
     }
-    createPayload = { title, metric, startsAt, endsAt, teams };
+    createPayload = { title, ...metricFields, startsAt, endsAt, teams };
     type = "team";
     teamsToStore = teams;
   } else {
@@ -127,7 +130,8 @@ export async function POST(request: NextRequest) {
   const { error: insertError } = await supabase.from("wom_competitions").insert({
     wom_id: created.competition.id,
     title,
-    metric,
+    metric: metrics[0],
+    metrics: metrics.length > 1 ? metrics : null,
     type,
     starts_at: startsAt,
     ends_at: endsAt,
@@ -156,12 +160,12 @@ export async function POST(request: NextRequest) {
     try {
       const channelId = await getAlertChannel(supabase, "competitions");
       if (channelId) {
-        const metricLabel = metric.replace(/_/g, " ");
+        const names = metrics.map((m) => (MetricProps as Record<string, { name: string }>)[m]?.name ?? m.replace(/_/g, " "));
         const dateStr = new Date(startsAt).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
         await postToDestination(
           channelId,
           title,
-          `🏆 **New competition:** ${title}\nMetric: ${metricLabel}\nStarts: ${dateStr}\nhttps://wiseoldman.net/competitions/${created.competition.id}`
+          `🏆 **New competition:** ${title}\n${names.length > 1 ? "Tracking" : "Metric"}: ${names.join(", ")}\nStarts: ${dateStr}\nhttps://wiseoldman.net/competitions/${created.competition.id}`
         );
       }
     } catch (err) {

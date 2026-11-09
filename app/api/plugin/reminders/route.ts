@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { metricsOf } from "@/lib/competition-metrics";
 import { createClient } from "@supabase/supabase-js";
 import { verifyPluginToken } from "@/lib/plugin-auth";
 import { hasPermission } from "@/lib/permissions";
@@ -174,7 +175,7 @@ export async function GET(request: NextRequest) {
   const nowIso = now.toISOString();
   const { data: activeComps } = await supabase
     .from("wom_competitions")
-    .select("wom_id, title, metric, type, ends_at")
+    .select("wom_id, title, metric, metrics, type, ends_at")
     .lte("starts_at", nowIso)
     .gte("ends_at", nowIso)
     .order("ends_at", { ascending: true })
@@ -191,6 +192,8 @@ export async function GET(request: NextRequest) {
         womId: c.wom_id,
         title: c.title,
         metric: c.metric,
+        // Every skill/boss when it tracks more than one (WOM ranks by the combined total).
+        metrics: metricsOf(c),
         kind: metricKind === "skill" ? "sotw" : metricKind === "boss" ? "botw" : "other",
         endsAt: c.ends_at,
         participantCount: standings.length,

@@ -7,12 +7,14 @@ import Link from "next/link";
 import { SKILLS, BOSSES, ACTIVITIES, COMPUTED_METRICS, MetricProps } from "@wise-old-man/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { MAX_METRICS, metricsOf } from "@/lib/competition-metrics";
 
 interface TrackedCompetition {
   id: string;
   wom_id: number;
   title: string;
   metric: string;
+  metrics: string[] | null;
   type: "classic" | "team";
   starts_at: string;
   ends_at: string;
@@ -36,6 +38,69 @@ const METRIC_GROUPS: { label: string; metrics: string[] }[] = [
 
 function metricLabel(metric: string): string {
   return (MetricProps as Record<string, { name: string }>)[metric]?.name ?? metric.replace(/_/g, " ");
+}
+
+/**
+ * One or more skills/bosses for a competition. WOM ranks everyone by the
+ * combined total, so e.g. a Boss of the Week can cover two bosses.
+ */
+function MetricsField({
+  value,
+  onChange,
+  options,
+  choices,
+  noun,
+  small,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+  /** The <option>s (and <optgroup>s) to choose from. */
+  options: React.ReactNode;
+  /** The same choices as a list, in order, so "Add another" starts on one not picked yet. */
+  choices: string[];
+  /** "skill", "boss" or "metric", for the add button. */
+  noun: string;
+  small?: boolean;
+}) {
+  const set = (i: number, m: string) => onChange(value.map((v, idx) => (idx === i ? m : v)));
+  const dupes = value.filter((m, i) => value.indexOf(m) !== i);
+  return (
+    <div className="space-y-2">
+      {value.map((m, i) => (
+        <div key={i} className="flex gap-2">
+          <select value={m} onChange={(e) => set(i, e.target.value)} className={`${inputClass} cursor-pointer`} aria-label={`${noun} ${i + 1}`}>
+            {options}
+          </select>
+          {value.length > 1 && (
+            <button
+              type="button"
+              onClick={() => onChange(value.filter((_, idx) => idx !== i))}
+              className="shrink-0 px-2 rounded-md border border-bark-brown-light/50 text-iron-grey hover:text-red-700 hover:border-red-700 cursor-pointer"
+              title={`Remove ${metricLabel(m)}`}
+              aria-label={`Remove ${metricLabel(m)}`}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        {value.length < MAX_METRICS && (
+          <button
+            type="button"
+            onClick={() => onChange([...value, choices.find((c) => !value.includes(c)) ?? value[value.length - 1]])}
+            className={`${small ? "text-xs" : "text-sm"} text-gnome-green hover:underline cursor-pointer`}
+          >
+            + Add another {noun}
+          </button>
+        )}
+        {value.length > 1 && (
+          <span className="text-xs text-iron-grey">Wise Old Man ranks everyone by their combined total across all of these.</span>
+        )}
+      </div>
+      {dupes.length > 0 && <p className="text-xs text-red-700">{metricLabel(dupes[0])} is picked twice; the extra one will be dropped.</p>}
+    </div>
+  );
 }
 
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
@@ -64,7 +129,8 @@ export default function WomCompetitionsPage() {
   const [bossNames, setBossNames] = useState<BossTitleNames>({});
 
   const [title, setTitle] = useState("");
-  const [metric, setMetric] = useState("overall");
+  const [metrics, setMetrics] = useState<string[]>(["overall"]);
+  const metric = metrics[0];
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [payoutWinnerCount, setPayoutWinnerCount] = useState(10);
@@ -119,7 +185,7 @@ export default function WomCompetitionsPage() {
   const suggestedTier: Difficulty | null = lastBossWeek ? (lastBossWeek.tier === "hard" ? "easy" : "hard") : null;
 
   const titleName = (m: string) => (kind === "botw" ? bossTitleName(m, bossNames) : metricLabel(m));
-  const autoTitle = kind === "custom" ? "" : weeklyTitle(kind, startsAt ? new Date(startsAt) : null, titleName(metric));
+  const autoTitle = kind === "custom" ? "" : weeklyTitle(kind, startsAt ? new Date(startsAt) : null, [...new Set(metrics)].map(titleName).join(" & "));
   // Keep the title in step with the boss/skill and date until someone types their own.
   const shownTitle = kind !== "custom" && titleAuto ? autoTitle : title;
 
@@ -128,9 +194,11 @@ export default function WomCompetitionsPage() {
     setTitleAuto(true);
     if (k === "custom") return;
     const list = k === "sotw" ? [...SKILLS] : [...BOSSES];
-    if (!(list as string[]).includes(metric)) {
+    const kept = metrics.filter((m) => (list as string[]).includes(m) && m !== "overall");
+    if (kept.length) setMetrics(kept);
+    else {
       const first = k === "botw" && suggestedTier ? (BOSSES as readonly string[]).find((b) => bossDifficulty(b, bossTiers) === suggestedTier) : undefined;
-      setMetric(first ?? (k === "sotw" ? "mining" : list[0]));
+      setMetrics([first ?? (k === "sotw" ? "mining" : list[0])]);
     }
     if (!startsAt) {
       const start = nextWeeklyStart();
@@ -164,7 +232,7 @@ export default function WomCompetitionsPage() {
     setTitleAuto(true);
     setEndAuto(true);
     setTitle("");
-    setMetric("overall");
+    setMetrics(["overall"]);
     setStartsAt("");
     setEndsAt("");
     setPayoutWinnerCount(10);
@@ -212,7 +280,7 @@ export default function WomCompetitionsPage() {
 
     const body: Record<string, unknown> = {
       title: shownTitle,
-      metric,
+      metrics: [...new Set(metrics)],
       startsAt: startsAt ? new Date(startsAt).toISOString() : undefined,
       endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
       participantMode,
@@ -341,7 +409,12 @@ export default function WomCompetitionsPage() {
 
             <div>
               <label className="block text-sm font-semibold text-bark-brown mb-1">{kind === "sotw" ? "Skill *" : kind === "botw" ? "Boss *" : "Metric *"}</label>
-              <select value={metric} onChange={(e) => setMetric(e.target.value)} className={`${inputClass} cursor-pointer`}>
+              <MetricsField
+                value={metrics}
+                onChange={setMetrics}
+                noun={kind === "sotw" ? "skill" : kind === "botw" ? "boss" : "metric"}
+                choices={kind === "sotw" ? SKILLS.filter((m) => m !== "overall") : kind === "botw" ? bossOptions.flatMap((o) => o.metrics) : METRIC_GROUPS.flatMap((g) => g.metrics)}
+                options={<>
                 {kind === "sotw" &&
                   SKILLS.filter((m) => m !== "overall").map((m) => (
                     <option key={m} value={m}>{metricLabel(m)}</option>
@@ -365,7 +438,8 @@ export default function WomCompetitionsPage() {
                       ))}
                     </optgroup>
                   ))}
-              </select>
+                </>}
+              />
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
@@ -541,7 +615,7 @@ export default function WomCompetitionsPage() {
             {postToDiscord && (
               <div className="bg-[#313338] text-[#dbdee1] font-sans text-sm leading-relaxed rounded-lg border border-[#1e1f22] p-4">
                 <pre className="whitespace-pre-wrap break-words font-sans text-[13px]">
-                  {`🏆 New competition: ${shownTitle || "(title)"}\nMetric: ${metricLabel(metric)}\nStarts: ${startsAt ? new Date(startsAt).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "(date)"}\nhttps://wiseoldman.net/competitions/...`}
+                  {`🏆 New competition: ${shownTitle || "(title)"}\n${metrics.length > 1 ? "Tracking" : "Metric"}: ${[...new Set(metrics)].map(metricLabel).join(", ")}\nStarts: ${startsAt ? new Date(startsAt).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "(date)"}\nhttps://wiseoldman.net/competitions/...`}
                 </pre>
               </div>
             )}
@@ -552,7 +626,7 @@ export default function WomCompetitionsPage() {
         {step === 3 && (
           <div className="space-y-3 text-sm">
             <div><span className="text-iron-grey">Title:</span> <span className="font-semibold text-bark-brown">{shownTitle}</span></div>
-            <div><span className="text-iron-grey">Metric:</span> <span className="font-semibold text-bark-brown">{metricLabel(metric)}</span></div>
+            <div><span className="text-iron-grey">{metrics.length > 1 ? "Tracking:" : "Metric:"}</span> <span className="font-semibold text-bark-brown">{[...new Set(metrics)].map(metricLabel).join(", ")}</span></div>
             <div>
               <span className="text-iron-grey">Starts:</span>{" "}
               <span className="font-semibold text-bark-brown">{startsAt ? new Date(startsAt).toLocaleString() : "—"}</span>
@@ -611,9 +685,11 @@ export default function WomCompetitionsPage() {
                 <div className="min-w-0">
                   <p className="font-semibold text-bark-brown truncate">
                     {comp.title}
-                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-gnome-green/10 text-gnome-green align-middle">
-                      {metricLabel(comp.metric)}
-                    </span>
+                    {metricsOf(comp).map((m) => (
+                      <span key={m} className="ml-2 text-xs px-1.5 py-0.5 rounded bg-gnome-green/10 text-gnome-green align-middle">
+                        {metricLabel(m)}
+                      </span>
+                    ))}
                     {comp.type === "team" && (
                       <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-iron-grey/10 text-iron-grey align-middle">Team</span>
                     )}
@@ -651,7 +727,7 @@ export default function WomCompetitionsPage() {
 
 function ManagePanel({ comp, onChanged }: { comp: TrackedCompetition; onChanged: () => void }) {
   const [title, setTitle] = useState(comp.title);
-  const [metric, setMetric] = useState(comp.metric);
+  const [metrics, setMetrics] = useState<string[]>(metricsOf(comp));
   const [startsAt, setStartsAt] = useState(toDatetimeLocal(comp.starts_at));
   const [endsAt, setEndsAt] = useState(toDatetimeLocal(comp.ends_at));
   const [savingDetails, setSavingDetails] = useState(false);
@@ -671,7 +747,7 @@ function ManagePanel({ comp, onChanged }: { comp: TrackedCompetition; onChanged:
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title,
-        metric,
+        metrics: [...new Set(metrics)],
         startsAt: startsAt ? new Date(startsAt).toISOString() : undefined,
         endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
       }),
@@ -759,16 +835,21 @@ function ManagePanel({ comp, onChanged }: { comp: TrackedCompetition; onChanged:
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-bark-brown mb-1">Metric</label>
-          <select value={metric} onChange={(e) => setMetric(e.target.value)} className={`${inputClass} cursor-pointer`}>
-            {METRIC_GROUPS.map((group) => (
+          <label className="block text-xs font-semibold text-bark-brown mb-1">Skills / bosses</label>
+          <MetricsField
+            value={metrics}
+            onChange={setMetrics}
+            noun="skill or boss"
+            choices={METRIC_GROUPS.flatMap((g) => g.metrics)}
+            small
+            options={METRIC_GROUPS.map((group) => (
               <optgroup key={group.label} label={group.label}>
                 {group.metrics.map((m) => (
                   <option key={m} value={m}>{metricLabel(m)}</option>
                 ))}
               </optgroup>
             ))}
-          </select>
+          />
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { SKILLS, BOSSES, ACTIVITIES, COMPUTED_METRICS } from "@wise-old-man/utils";
 import { checkPermission } from "@/lib/check-permission";
 import { deleteWomCompetition, editWomCompetition, withCompetitionCode } from "@/lib/wom";
-
-const VALID_METRICS = new Set<string>([...SKILLS, ...BOSSES, ...ACTIVITIES, ...COMPUTED_METRICS]);
+import { parseMetrics, womMetricFields } from "@/lib/competition-metrics";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,7 +32,7 @@ export async function PUT(
   if (!row) return NextResponse.json({ error: "Competition not found." }, { status: 404 });
 
   const body = await request.json().catch(() => ({}));
-  const womPayload: { title?: string; metric?: string; startsAt?: Date; endsAt?: Date; participants?: string[]; teams?: { name: string; participants: string[] }[] } = {};
+  const womPayload: { title?: string; metric?: string; metrics?: string[]; startsAt?: Date; endsAt?: Date; participants?: string[]; teams?: { name: string; participants: string[] }[] } = {};
   const localUpdate: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
   if (typeof body.title === "string") {
@@ -43,10 +41,13 @@ export async function PUT(
     womPayload.title = title;
     localUpdate.title = title;
   }
-  if (typeof body.metric === "string") {
-    if (!VALID_METRICS.has(body.metric)) return NextResponse.json({ error: "Invalid metric." }, { status: 400 });
-    womPayload.metric = body.metric;
-    localUpdate.metric = body.metric;
+  const parsed = parseMetrics(body);
+  if (parsed && "error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  if (parsed) {
+    // WOM keeps the full list when `metrics` is sent; a single one is sent as both so the old list is replaced.
+    Object.assign(womPayload, womMetricFields(parsed.metrics), { metrics: parsed.metrics });
+    localUpdate.metric = parsed.metrics[0];
+    localUpdate.metrics = parsed.metrics.length > 1 ? parsed.metrics : null;
   }
   if (typeof body.startsAt === "string") {
     if (Number.isNaN(Date.parse(body.startsAt))) return NextResponse.json({ error: "Invalid start time." }, { status: 400 });
