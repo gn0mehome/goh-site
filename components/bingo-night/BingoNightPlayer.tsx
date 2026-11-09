@@ -144,10 +144,9 @@ export function BingoNightPlayer() {
     setError(null);
     const { ok, data } = await post("/api/bingo-night/card", { action: "swap", playerKey: key });
     setBusy(false);
-    if (ok) {
-      setCard(data.card);
-      setKeptForRound(round?.id ?? null);
-    } else setError(data.error ?? "Couldn't swap cards.");
+    // The buttons stay up, so they can swap again until they press Keep my card or the round starts.
+    if (ok) setCard(data.card);
+    else setError(data.error ?? "Couldn't swap cards.");
   };
 
   const claim = async () => {

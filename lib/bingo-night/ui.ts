@@ -30,14 +30,18 @@ export function safeLabel(config: GameConfig, v: number): string {
   }
 }
 
-/** Font size for a word in a card square, so long words still fit on a phone. */
+/**
+ * Font size for a word in a card square, so it fits on any phone without
+ * breaking a word in half: the longest single word has to fit across the
+ * square (the card's grid is a size container, so this scales with it), and
+ * longer phrases get smaller so they stay within about three lines.
+ */
 export function squareFont(text: string): string {
   const n = text.length;
-  if (n <= 3) return "1.35rem";
-  if (n <= 6) return "0.95rem";
-  if (n <= 10) return "0.78rem";
-  if (n <= 14) return "0.7rem";
-  return "0.62rem";
+  const cap = n <= 3 ? "1.35rem" : n <= 6 ? "0.95rem" : n <= 10 ? "0.82rem" : n <= 14 ? "0.74rem" : "0.66rem";
+  const longest = Math.max(...text.split(/\s+/).map((w) => w.length), 1);
+  // A square's inner width is about 20% of the grid less its gaps and padding; a bold letter is about 0.62em wide.
+  return `min(${cap}, calc((20cqi - 11px) / ${(0.62 * longest).toFixed(2)}))`;
 }
 
 export { COLUMNS };

@@ -31,7 +31,7 @@ export function BingoCard({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
+      <div className="grid grid-cols-5 gap-1 sm:gap-1.5" style={{ containerType: "inline-size" }}>
         {squares.map((v, pos) => {
           const free = pos === FREE || v === null;
           const label = free ? "Gn0me Home" : safeLabel(config, v);
@@ -52,8 +52,9 @@ export function BingoCard({
                 color: isMarked ? "var(--bn-hit-ink)" : "var(--bn-ink)",
                 boxShadow: outline?.has(pos) ? "0 0 0 3px var(--bn-accent) inset" : isCalled && !isMarked ? "0 0 0 2px var(--bn-hit) inset" : undefined,
                 fontSize: compact ? (words ? "0.5rem" : "0.75rem") : free ? "0.72rem" : words ? squareFont(label) : "1.4rem",
-                wordBreak: words ? "break-word" : undefined,
-                hyphens: words ? "auto" : undefined,
+                // Words only break between words; a word too long for its square shrinks instead (squareFont).
+                overflowWrap: words ? "normal" : undefined,
+                wordBreak: words ? "keep-all" : undefined,
               }}
             >
               <span>{free ? "Gn0me Home" : config.mode === "numbers" ? String(v) : label}</span>
