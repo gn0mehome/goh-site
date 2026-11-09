@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/auth";
 import { AccountForm } from "@/components/account/AccountForm";
 import { AccountOutfitSection } from "@/components/profiles/AccountOutfitSection";
+import { AccountThemeSection } from "@/components/account/AccountThemeSection";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default async function AccountPage() {
     <>
       <AccountForm userId={user.id} userMeta={user.user_metadata} />
       <AccountOutfitSection />
+      <AccountThemeSection />
     </>
   );
 }

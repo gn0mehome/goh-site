@@ -223,8 +223,8 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />
                 <YAxis tick={{ fontSize: 10, fill: "#555" }} domain={["dataMin - 2", "dataMax + 2"]} />
-                <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
-                <Area isAnimationActive={false} type="monotone" dataKey="member_count" stroke="#2D5016" fill="#2D501640" strokeWidth={2} name="Members" />
+                <Tooltip contentStyle={{ backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
+                <Area isAnimationActive={false} type="monotone" dataKey="member_count" stroke="var(--color-gnome-green)" fill="color-mix(in srgb, var(--color-gnome-green) 25%, transparent)" strokeWidth={2} name="Members" />
               </AreaChart>
             </ResponsiveContainer>
           </Card>
@@ -236,7 +236,7 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />
                 <YAxis tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(v: number) => formatNum(v)} />
-                <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} formatter={(v) => [formatNum(Number(v)), "Total XP"]} />
+                <Tooltip contentStyle={{ backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" }} formatter={(v) => [formatNum(Number(v)), "Total XP"]} />
                 <Area isAnimationActive={false} type="monotone" dataKey="total_exp" stroke="#DAA520" fill="#DAA52040" strokeWidth={2} name="Total XP" />
               </AreaChart>
             </ResponsiveContainer>
@@ -249,7 +249,7 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />
                 <YAxis tick={{ fontSize: 10, fill: "#555" }} />
-                <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
+                <Tooltip contentStyle={{ backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
                 <Line isAnimationActive={false} type="monotone" dataKey="registered_users" stroke="#4A7C23" strokeWidth={2} dot={false} name="Registered" />
                 <Line isAnimationActive={false} type="monotone" dataKey="linked_rsns" stroke="#DAA520" strokeWidth={2} dot={false} name="Linked RSNs" />
               </LineChart>
@@ -263,8 +263,8 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />
                 <YAxis tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(v: number) => formatNum(v)} />
-                <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} formatter={(v) => [formatNum(Number(v))]} />
-                <Line isAnimationActive={false} type="monotone" dataKey="total_ehp" stroke="#2D5016" strokeWidth={2} dot={false} name="EHP" />
+                <Tooltip contentStyle={{ backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" }} formatter={(v) => [formatNum(Number(v))]} />
+                <Line isAnimationActive={false} type="monotone" dataKey="total_ehp" stroke="var(--color-gnome-green)" strokeWidth={2} dot={false} name="EHP" />
                 <Line isAnimationActive={false} type="monotone" dataKey="total_ehb" stroke="#8B1A1A" strokeWidth={2} dot={false} name="EHB" />
               </LineChart>
             </ResponsiveContainer>

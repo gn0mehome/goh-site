@@ -10,6 +10,9 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { getHiddenSectionKeys } from "@/lib/clan-access";
 import { getRankLabels, type RankLabels } from "@/lib/rank-labels";
 import { RankLabelsProvider } from "@/components/ui/RankLabelsProvider";
+import { cookies } from "next/headers";
+import { getThemeState } from "@/lib/site-theme-server";
+import { MODE_COOKIE, resolveTheme, type SiteThemeKey } from "@/lib/site-theme";
 import "./globals.css";
 
 function getServiceClient() {
@@ -90,16 +93,28 @@ export default async function RootLayout({
   const supabase = getServiceClient();
   let initialHiddenKeys: string[] = [];
   let rankLabels: RankLabels = {};
+  // The colour theme (the member's choice, else the admins' default) and
+  // light/dark (a cookie the toggle sets) are applied here so the very first
+  // paint is already right.
+  let theme: SiteThemeKey = resolveTheme("gnome");
   if (supabase) {
     const authClient = await createSupabaseServerClient();
     const { data: { user } } = await authClient.auth.getUser();
-    [initialHiddenKeys, rankLabels] = await Promise.all([getHiddenSectionKeys(supabase, user?.id ?? null), getRankLabels(supabase).catch(() => ({}))]);
+    let themeState;
+    [initialHiddenKeys, rankLabels, themeState] = await Promise.all([
+      getHiddenSectionKeys(supabase, user?.id ?? null),
+      getRankLabels(supabase).catch(() => ({})),
+      getThemeState(supabase, user?.id ?? null).catch(() => null),
+    ]);
+    if (themeState) theme = themeState.theme;
   }
+  const dark = (await cookies()).get(MODE_COOKIE)?.value === "dark";
 
   return (
     <html
       lang="en"
-      className={`${medievalSharp.variable} ${merriweather.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${medievalSharp.variable} ${merriweather.variable} ${jetbrainsMono.variable} h-full antialiased${dark ? " dark" : ""}`}
+      data-theme={theme}
     >
       <body className="min-h-full flex flex-col">
         {ADSENSE_CLIENT_ID && (

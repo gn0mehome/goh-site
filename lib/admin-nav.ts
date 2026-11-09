@@ -59,6 +59,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
 
   { href: "/admin/alert-channels", label: "Discord Channels", group: "Settings", permission: "manage_settings" },
   { href: "/admin/voice-rooms", label: "Voice Rooms", group: "Settings", permission: "manage_settings" },
+  { href: "/admin/site-theme", label: "Site Theme", group: "Settings", permission: "manage_settings" },
   { href: "/admin/clan-feed", label: "Clan Feed (DropTracker)", group: "Settings", permission: "manage_settings" },
   { href: "/admin/rank-labels", label: "Rank Labels", group: "Settings", permission: "manage_settings" },
   { href: "/admin/boss-difficulty", label: "Boss Difficulty", group: "Settings", permission: "manage_competitions" },

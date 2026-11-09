@@ -1,0 +1,137 @@
+/* ===== Site themes =====
+   Every colour the site's utilities use comes from these variables
+   (globals.css maps Tailwind's palette onto them), so a theme is just a set
+   of values. --c-* is the light palette (the navbar, buttons and other
+   "solid" colours use it in dark mode too); --d-* is what dark mode uses for
+   text, cards, borders and the page. <html data-theme="..."> picks the theme
+   (lib/site-theme.ts); the "dark" class picks the mode. Same seven themes as
+   the stream overlays. The selectors work on any element, so the theme
+   pickers can show a small preview of each theme inside the page. */
+
+/* Gn0me Home (default): forest green, bark brown, parchment */
+:root,
+[data-theme="gnome"] {
+  --c-green: #2D5016;
+  --c-green-light: #3D6B1E;
+  --c-bark: #3E2B1C;
+  --c-bark-light: #4A3428;
+  --c-parchment: #F5E6C8;
+  --c-parchment-dark: #E8D5A8;
+  --c-gold: #9E7B15;
+  --c-gold-light: #FFD700;
+  --c-gold-display: #DAA520;
+  --c-red: #8B1A1A;
+  --c-grey: #555555;
+  --c-text: #1A1A1A;
+  --c-text-light: #F5F5F5;
+
+  --d-green: #6BBF3B;
+  --d-green-light: #8CD660;
+  --d-bark: #d4c4a0;
+  --d-bark-light: #c4b48e;
+  --d-grey: #9fb0c2;
+  --d-gold: #DAA520;
+  --d-text: #E8D5A8;
+  --d-parchment-text: #F5E6C8;
+  --d-parchment-dark-text: #a89878;
+  --d-red: #E85555;
+  --d-page: #1a2332;
+  --d-surface: #1e2d40;
+  --d-surface-2: #152030;
+  --d-border: #2a3f5a;
+  --d-border-2: #233044;
+  --d-placeholder: #6b7f96;
+
+  --theme-badge: none;
+}
+
+/* Halloween: midnight purple and pumpkin orange */
+[data-theme="halloween"] {
+  --c-green: #4B1F6F; --c-green-light: #5E2A88;
+  --c-bark: #24122F; --c-bark-light: #3A2050;
+  --c-parchment: #F6E7D6; --c-parchment-dark: #EBD2B6;
+  --c-gold: #A04E0B; --c-gold-light: #FF9A2E; --c-gold-display: #E0701A;
+  --c-red: #9C2A0E;
+  --d-green: #FF9A2E; --d-green-light: #FFB766;
+  --d-bark: #E6D3F2; --d-bark-light: #CDB8E0; --d-grey: #A994C4;
+  --d-gold: #FFC27A; --d-text: #F0E4FA; --d-parchment-text: #FBEFE0; --d-parchment-dark-text: #9C86B8; --d-red: #FF6B6B;
+  --d-page: #140C1F; --d-surface: #22163A; --d-surface-2: #1A1030; --d-border: #3A2858; --d-border-2: #2C1D45; --d-placeholder: #7E6A9C;
+  --theme-badge: "🎃";
+}
+
+/* Winter holidays: deep icy blue, frost and festive red */
+[data-theme="winter"] {
+  --c-green: #1F4E8C; --c-green-light: #2A63A8;
+  --c-bark: #14243A; --c-bark-light: #1E3350;
+  --c-parchment: #EEF4FA; --c-parchment-dark: #D9E6F2;
+  --c-gold: #8A6A12; --c-gold-light: #BFE3FF; --c-gold-display: #4A7FA8;
+  --c-red: #A8212C;
+  --d-green: #7CC4FF; --d-green-light: #A8D8FF;
+  --d-bark: #D8E8F7; --d-bark-light: #BCD3E8; --d-grey: #8FA8C2;
+  --d-gold: #E6C35C; --d-text: #E8F2FC; --d-parchment-text: #F2F8FF; --d-parchment-dark-text: #8FA8C2; --d-red: #FF6B7A;
+  --d-page: #0E1A2C; --d-surface: #17283F; --d-surface-2: #11203A; --d-border: #24405F; --d-border-2: #1C3350; --d-placeholder: #6B86A6;
+  --theme-badge: "❄️";
+}
+
+/* Valentine's Day: deep rose and soft pink */
+[data-theme="valentines"] {
+  --c-green: #8E1F4F; --c-green-light: #A8325E;
+  --c-bark: #3D1023; --c-bark-light: #561833;
+  --c-parchment: #FBEFF2; --c-parchment-dark: #F2D9E1;
+  --c-gold: #9A3A5E; --c-gold-light: #FF9EC0; --c-gold-display: #E86B98;
+  --c-red: #B0123A;
+  --d-green: #FF7FAE; --d-green-light: #FFA6C8;
+  --d-bark: #F5D6E2; --d-bark-light: #E8C3D2; --d-grey: #C99AAE;
+  --d-gold: #F2B6CB; --d-text: #FBE8EF; --d-parchment-text: #FFF0F5; --d-parchment-dark-text: #B48698; --d-red: #FF6B8B;
+  --d-page: #1F0A14; --d-surface: #2E1220; --d-surface-2: #25101B; --d-border: #4A1F33; --d-border-2: #3A1828; --d-placeholder: #9A6A80;
+  --theme-badge: "💖";
+}
+
+/* St. Patrick's Day: shamrock green and pot-of-gold */
+[data-theme="stpatricks"] {
+  --c-green: #14612F; --c-green-light: #1B7A3C;
+  --c-bark: #0A2E17; --c-bark-light: #124022;
+  --c-parchment: #F1F7E6; --c-parchment-dark: #DDEBC8;
+  --c-gold: #8A6A00; --c-gold-light: #F5C518; --c-gold-display: #D4A20A;
+  --c-red: #8B1A1A;
+  --d-green: #4CD07D; --d-green-light: #7BE09F;
+  --d-bark: #D6EED9; --d-bark-light: #BCDCC1; --d-grey: #94BB9C;
+  --d-gold: #F5C518; --d-text: #E8F7EA; --d-parchment-text: #F3FBE8; --d-parchment-dark-text: #8FB898; --d-red: #FF6B6B;
+  --d-page: #0A1F12; --d-surface: #12301C; --d-surface-2: #0E2717; --d-border: #1F4A2C; --d-border-2: #183C24; --d-placeholder: #6E9A78;
+  --theme-badge: "☘️";
+}
+
+/* 4th of July: navy, star white and flag red */
+[data-theme="july4"] {
+  --c-green: #1A2A63; --c-green-light: #2F4AA0;
+  --c-bark: #0A1230; --c-bark-light: #111C45;
+  --c-parchment: #F4F6FB; --c-parchment-dark: #DDE3F0;
+  --c-gold: #8A6A12; --c-gold-light: #F5F7FF; --c-gold-display: #D22B3A;
+  --c-red: #B01E2C;
+  --d-green: #6F9BFF; --d-green-light: #9DBBFF;
+  --d-bark: #DCE3F7; --d-bark-light: #C5CDEA; --d-grey: #9AA6CC;
+  --d-gold: #FF7A86; --d-text: #EEF2FF; --d-parchment-text: #F4F6FF; --d-parchment-dark-text: #8E99C2; --d-red: #FF5C6C;
+  --d-page: #0B1228; --d-surface: #142046; --d-surface-2: #101A3A; --d-border: #263A73; --d-border-2: #1D2E5C; --d-placeholder: #6C7AA8;
+  --theme-badge: "🎆";
+}
+
+/* Thanksgiving: warm brown, harvest gold and burnt orange */
+[data-theme="thanksgiving"] {
+  --c-green: #7A3B12; --c-green-light: #94491A;
+  --c-bark: #24140A; --c-bark-light: #351E0F;
+  --c-parchment: #F7EBD9; --c-parchment-dark: #EAD3B2;
+  --c-gold: #8A5A0B; --c-gold-light: #F2B24A; --c-gold-display: #D28A22;
+  --c-red: #8B2A12;
+  --d-green: #F2A24A; --d-green-light: #F7BE78;
+  --d-bark: #EBD8C0; --d-bark-light: #DCC6A8; --d-grey: #B89C7C;
+  --d-gold: #F2B24A; --d-text: #F6E9D8; --d-parchment-text: #FBF1E4; --d-parchment-dark-text: #A88A68; --d-red: #FF7A55;
+  --d-page: #1A1009; --d-surface: #2A1B10; --d-surface-2: #22160C; --d-border: #4A3018; --d-border-2: #3A2614; --d-placeholder: #8A7058;
+  --theme-badge: "🦃";
+}
+
+/* A small seasonal badge after the site name in the navbar. */
+.site-theme-badge::after {
+  content: var(--theme-badge);
+  margin-left: 0.35em;
+  font-size: 0.8em;
+}

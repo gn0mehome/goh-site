@@ -391,7 +391,7 @@ export default function AdminActivityPage() {
                     <CartesianGrid strokeDasharray="3 3"  />
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} angle={-35} textAnchor="end" height={80} interval={0} />
                     <YAxis tick={{ fontSize: 12 }} tickFormatter={compact} width={44} />
-                    <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
+                    <Tooltip contentStyle={{ backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
                     <Legend wrapperStyle={{ fontSize: "0.8rem" }} />
                     <Bar isAnimationActive={false} dataKey="ehpGained" name="EHP Gained" fill="var(--color-gnome-green)" radius={[4, 4, 0, 0]} />
                     <Bar isAnimationActive={false} dataKey="ehbGained" name="EHB Gained" fill="#8B1A1A" radius={[4, 4, 0, 0]} />
@@ -409,7 +409,7 @@ export default function AdminActivityPage() {
                   <XAxis dataKey="key" tickFormatter={(k) => FOCUS_LABELS[k as Focus] ?? k} tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} allowDecimals={false} width={44} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
+                    contentStyle={{ backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" }}
                     labelFormatter={(k) => FOCUS_LABELS[k as Focus] ?? k}
                   />
                   <Bar isAnimationActive={false} dataKey="count" radius={[4, 4, 0, 0]}>
@@ -436,7 +436,7 @@ export default function AdminActivityPage() {
                     <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={compact} />
                     <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 12 }} interval={0} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
+                      contentStyle={{ backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" }}
                       formatter={(v) => [Number(v).toLocaleString(), "XP Gained"]}
                     />
                     <Bar isAnimationActive={false} dataKey="totalGained" name="XP Gained" fill="var(--color-gnome-green)" radius={[0, 4, 4, 0]} />
@@ -457,7 +457,7 @@ export default function AdminActivityPage() {
                     <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={compact} />
                     <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 12 }} interval={0} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
+                      contentStyle={{ backgroundColor: "var(--color-parchment)", border: "1px solid var(--color-bark-brown-light)", borderRadius: "0.375rem", fontSize: "0.75rem" }}
                       formatter={(v) => [Number(v).toLocaleString(), "KC Gained"]}
                     />
                     <Bar isAnimationActive={false} dataKey="totalGained" name="KC Gained" fill="#8B1A1A" radius={[0, 4, 4, 0]} />

@@ -1,28 +1,45 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { MODE_COOKIE } from "@/lib/site-theme";
+
+/** Remembered in a cookie (so the server draws the right mode first time) and localStorage. */
+function remember(dark: boolean) {
+  document.cookie = `${MODE_COOKIE}=${dark ? "dark" : "light"}; path=/; max-age=31536000; samesite=lax`;
+  try {
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  } catch {
+    /* private mode */
+  }
+}
 
 export function ThemeToggle() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored === "dark") {
-      setDark(true);
+    // The server already applied the cookie; older visits only saved localStorage.
+    const on = document.documentElement.classList.contains("dark");
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem("theme");
+    } catch {
+      /* private mode */
+    }
+    if (!on && stored === "dark") {
       document.documentElement.classList.add("dark");
+      remember(true);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDark(true);
+    } else {
+      setDark(on);
     }
   }, []);
 
   const toggle = () => {
     const next = !dark;
     setDark(next);
-    if (next) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
+    document.documentElement.classList.toggle("dark", next);
+    remember(next);
   };
 
   return (
