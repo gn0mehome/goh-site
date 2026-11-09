@@ -23,6 +23,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/series-updates", label: "Series Updates", group: "Events", permission: "manage_events" },
   { href: "/admin/availability", label: "Availability Polls", group: "Events", permission: "manage_availability" },
   { href: "/admin/ingame-events", label: "In-Game Clan Panel", group: "Events", permission: "manage_events" },
+  { href: "/admin/bingo-night", label: "Bingo Night", group: "Events", permission: "host_bingo_night" },
 
   { href: "/admin/announcements", label: "Announcements", group: "Discord Posts", permission: "manage_events" },
   { href: "/admin/polls", label: "Polls", group: "Discord Posts", permission: "manage_polls" },

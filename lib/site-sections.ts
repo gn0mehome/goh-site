@@ -22,6 +22,7 @@ export const SITE_SECTIONS = [
   { key: "bank", label: "Bank (Loans)", description: "Loan board, request form, My Loans." },
   { key: "activities", label: "Contests", description: "Contests hub: live and upcoming bingos, quest races and art contests (/contests)." },
   { key: "bingo", label: "Bingo", description: "Bingo event boards." },
+  { key: "bingo_night", label: "Bingo Night", description: "Live bingo games anyone can play, and the stream view (/bingo-night)." },
   { key: "quests", label: "Quest Events", description: "Quest race event pages (/quests)." },
   { key: "art", label: "Art Contests", description: "Art contest pages: entering, voting and results (/art)." },
   { key: "gallery", label: "Gn0mie Gallery", description: "Public gallery of members' artwork (/gallery)." },

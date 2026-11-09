@@ -36,6 +36,25 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 9, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-09-bingo-night",
+    date: "2026-11-09",
+    kind: "new",
+    audience: "staff",
+    title: "Bingo Night: live bingo anyone can play",
+    summary:
+      "A new live bingo game for clan nights, built for the Friendsgiving Feast. Players open gn0mehome.com/bingo-night on their phone, type their RSN and get a card. No account is needed, so guests from other clans can play too. Cards have G N O M E across the top and are either numbers (G-4, O-38) or OSRS words (OSRS Classic, Friendsgiving Feast, or your own list). Any staff member can host: set up the game under Admin › Events › Bingo Night, press Launch when the event starts, pick each round's pattern (single line up to coverall, with how long each usually takes), then Start round and Draw. Every BINGO is checked automatically against what was actually called and lands in your claims queue as valid or not; you confirm the winner and their name goes up on the stream. Open the stream view and screen-share it in Discord voice. Only one person holds the controls at a time, and another staff member can take over if the host drops. The page is empty when no game is live. This is separate from the team Bingo boards, which haven't changed.",
+    tryIt: [
+      "Go to Admin › Events › Bingo Night and press + New game. Name it, pick numbers or words and a colour theme, and save it as a draft.",
+      "Press Launch, then Open round 1 with a pattern and press Open stream view.",
+      "On your phone, open gn0mehome.com/bingo-night and get a card. Back in the console, press Start round and Draw a few times, then press BINGO on your phone and watch the claim come in.",
+      "Press End game when you're done. Games stay in the list, and Copy makes a fresh draft for next time.",
+    ],
+    links: [
+      { label: "Bingo Night (host)", href: "/admin/bingo-night" },
+      { label: "Bingo Night (play)", href: "/bingo-night" },
+    ],
+  },
+  {
     id: "2026-11-09-edit-bot-posts",
     date: "2026-11-09",
     kind: "new",
