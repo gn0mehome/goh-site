@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function BingoNightPage() {
   if (!(await checkSectionAccess("bingo_night"))) return <SectionUnavailable />;
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 sm:py-10">
+    <div className="max-w-3xl lg:max-w-6xl mx-auto px-4 py-6 sm:py-10">
       <BingoNightPlayer />
     </div>
   );

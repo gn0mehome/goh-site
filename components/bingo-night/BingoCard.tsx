@@ -56,7 +56,7 @@ export function BingoCard({
                 background: isMarked ? "var(--bn-hit)" : "var(--bn-panel)",
                 color: isMarked ? "var(--bn-hit-ink)" : "var(--bn-ink)",
                 boxShadow: outline?.has(pos) ? "0 0 0 3px var(--bn-accent) inset" : isCalled && !isMarked ? "0 0 0 2px var(--bn-hit) inset" : undefined,
-                fontSize: compact ? (words ? "0.5rem" : "0.75rem") : free ? "0.72rem" : words ? (icon ? `calc(${squareFont(label)} * 0.8)` : squareFont(label)) : "1.4rem",
+                fontSize: compact ? (words ? "0.5rem" : "0.75rem") : free ? "3.2cqi" : words ? (icon ? `calc(${squareFont(label)} * 0.8)` : squareFont(label)) : "6.3cqi",
                 // Words only break between words; a word too long for its square shrinks instead (squareFont).
                 overflowWrap: words ? "normal" : undefined,
                 wordBreak: words ? "keep-all" : undefined,
