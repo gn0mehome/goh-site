@@ -222,6 +222,11 @@ h1, h2, h3 {
   --fc-list-event-hover-bg-color: var(--d-surface);
 }
 
+@media (max-width: 639px) {
+  .fc-gnome .fc .fc-header-toolbar { flex-wrap: wrap; gap: 0.5rem; }
+  .fc-gnome .fc .fc-toolbar-title { font-size: 1.25rem; }
+}
+
 .fc-gnome .fc .fc-toolbar-title {
   font-family: var(--font-display);
   color: var(--color-gnome-green);
@@ -256,6 +261,21 @@ h1, h2, h3 {
 
 .fc-gnome .fc .fc-event:hover {
   filter: brightness(1.1);
+}
+
+/* Skill / Boss of the Week in the month view: a thin line across the week
+   (the name sits in the column to the left of the calendar). */
+.fc-gnome .fc .fc-daygrid-event.fc-week-line {
+  height: 5px;
+  min-height: 0;
+  padding: 0;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.fc-gnome .fc .fc-daygrid-event.fc-week-line .fc-event-main {
+  padding: 0;
 }
 
 /* Charts (recharts): axis text, grid, legend and tooltip follow the theme,
