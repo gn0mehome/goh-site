@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { COLUMNS, PER_COLUMN } from "@/lib/bingo-night/core";
 import { themeVars } from "@/lib/bingo-night/themes";
-import { configFor, patternDescription, patternName, safeLabel } from "@/lib/bingo-night/ui";
+import { configFor, patternDescription, patternName, plainBangs, safeLabel } from "@/lib/bingo-night/ui";
 import { PatternPicture } from "./PatternPicture";
 import { QrCode } from "./QrCode";
+import { WikiIcon } from "./WikiIcon";
 import { useBingoState } from "./useBingoState";
 
 const W = 1920;
@@ -49,6 +50,7 @@ export function BingoNightDisplay() {
   const called = useMemo(() => new Set(calls), [calls]);
   const last = calls.length ? calls[calls.length - 1] : null;
   const lastLabel = last != null ? safeLabel(config, last) : null;
+  const icons = game?.icons ?? null;
   const winners = round?.winners ?? [];
 
   const stage = (children: React.ReactNode) => (
@@ -87,10 +89,10 @@ export function BingoNightDisplay() {
   return stage(
     <div className="h-full grid" style={{ gridTemplateColumns: "640px 1fr", gridTemplateRows: "minmax(0, 1fr)", gap: 40, padding: 48 }}>
       {/* Left: game, round, latest call, last five */}
-      <div className="flex flex-col" style={{ gap: 28 }}>
+      <div className="flex flex-col min-h-0" style={{ gap: 28 }}>
         <div>
           <p className="font-display leading-tight" style={{ fontSize: 58, color: "var(--bn-accent)" }}>
-            {game.name}
+            {plainBangs(game.name)}
           </p>
         </div>
         {round ? (
@@ -108,12 +110,13 @@ export function BingoNightDisplay() {
           <p style={{ fontSize: 40 }}>Grab your card. The first round starts soon!</p>
         )}
 
-        <div className="flex-1 rounded-3xl flex flex-col items-center justify-center" style={{ background: "var(--bn-panel)", color: "var(--bn-ink)" }}>
+        <div className="flex-1 min-h-0 overflow-hidden rounded-3xl flex flex-col items-center justify-center" style={{ background: "var(--bn-panel)", color: "var(--bn-ink)" }}>
           <p className="uppercase" style={{ fontSize: 30, letterSpacing: 6, opacity: 0.75 }}>
             {round?.status === "open" ? "Starting soon" : round?.status === "closed" ? "Round over" : "Latest call"}
           </p>
+          {lastLabel && icons?.[last as number] && <WikiIcon key={`i-${round?.id}-${calls.length}`} src={icons[last as number]} size={110} className="bn-reveal" style={{ margin: "6px 0" }} />}
           {lastLabel ? (
-            <p key={`${round?.id}-${calls.length}`} className="bn-reveal font-display font-bold text-center leading-none" style={{ fontSize: lastLabel.length > 10 ? 96 : lastLabel.length > 6 ? 130 : 210, padding: "0 24px", color: "var(--bn-head)" }}>
+            <p key={`${round?.id}-${calls.length}`} className="bn-reveal font-display font-bold text-center leading-none" style={{ fontSize: Math.round((lastLabel.length > 10 ? 96 : lastLabel.length > 6 ? 130 : 210) * (icons?.[last as number] ? 0.62 : 1)), padding: "0 24px", color: "var(--bn-head)" }}>
               {lastLabel}
             </p>
           ) : (
@@ -131,7 +134,8 @@ export function BingoNightDisplay() {
               .slice(-6, -1)
               .reverse()
               .map((v) => (
-                <span key={v} className="rounded-xl font-bold text-center" style={{ fontSize: config.mode === "words" ? 28 : 40, padding: config.mode === "words" ? "6px 14px" : "8px 14px", background: "rgba(0,0,0,.3)", minWidth: 100, whiteSpace: "nowrap" }}>
+                <span key={v} className="rounded-xl font-bold text-center inline-flex items-center" style={{ gap: 8, fontSize: config.mode === "words" ? 28 : 40, padding: config.mode === "words" ? "6px 14px" : "8px 14px", background: "rgba(0,0,0,.3)", minWidth: 100, whiteSpace: "nowrap" }}>
+                  <WikiIcon src={icons?.[v]} size={34} />
                   {safeLabel(config, v)}
                 </span>
               ))}
@@ -185,6 +189,7 @@ export function BingoNightDisplay() {
                       color: i === last ? "var(--bn-accent-ink)" : on ? "var(--bn-hit-ink)" : "rgba(255,255,255,.4)",
                     }}
                   >
+                    {icons?.[i] && <WikiIcon src={icons[i]} size={wordFont * 1.25} style={{ marginRight: 8, opacity: on || i === last ? 1 : 0.45 }} />}
                     {w}
                   </span>
                 );

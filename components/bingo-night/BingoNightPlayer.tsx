@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CLAIM_COOLDOWN_MS } from "@/lib/bingo-night/core";
 import { themeVars } from "@/lib/bingo-night/themes";
-import { configFor, patternDescription, patternName, safeLabel } from "@/lib/bingo-night/ui";
+import { configFor, patternDescription, patternName, plainBangs, safeLabel } from "@/lib/bingo-night/ui";
 import type { PlayerCard } from "@/lib/bingo-night/server";
 import { BingoCard } from "./BingoCard";
+import { WikiIcon } from "./WikiIcon";
 import { PatternPicture } from "./PatternPicture";
 import { useBingoState } from "./useBingoState";
 
@@ -193,6 +194,8 @@ export function BingoNightPlayer() {
   }
 
   const lastCall = calls.length ? safeLabel(config, calls[calls.length - 1]) : null;
+  const icons = game.icons;
+  const lastIcon = calls.length ? icons?.[calls[calls.length - 1]] ?? null : null;
   const iWon = !!card && !!round?.winners.some((w) => w.cardId === card.id);
   const coolLeft = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
   const showSwap = !!card && (!round || round.status === "open") && keptForRound !== (round?.id ?? "none");
@@ -201,7 +204,7 @@ export function BingoNightPlayer() {
     <div className="max-w-xl mx-auto space-y-4">
       <header className="text-center">
         <h1 className="font-display text-3xl sm:text-4xl" style={{ color: "var(--bn-accent)" }}>
-          {game.name}
+          {plainBangs(game.name)}
         </h1>
         {offline && <p className="text-sm mt-1 opacity-90">Reconnecting…</p>}
       </header>
@@ -220,7 +223,8 @@ export function BingoNightPlayer() {
             </div>
             <div className="text-right shrink-0">
               <p className="text-[11px] uppercase tracking-widest opacity-80">Last call</p>
-              <p className="font-display font-bold leading-none" style={{ color: "var(--bn-accent)", fontSize: lastCall && lastCall.length > 8 ? "1.15rem" : "2.1rem" }} aria-live="polite">
+              <p className="font-display font-bold leading-none flex items-center justify-end gap-1.5" style={{ color: "var(--bn-accent)", fontSize: lastCall && lastCall.length > 8 ? "1.15rem" : "2.1rem" }} aria-live="polite">
+                <WikiIcon src={lastIcon} size="1.6rem" />
                 {lastCall ?? "–"}
               </p>
               <p className="text-[11px] opacity-80">{calls.length} called</p>
@@ -283,7 +287,7 @@ export function BingoNightPlayer() {
             </label>
           </div>
 
-          <BingoCard squares={card.squares} config={config} marked={marked} called={called} onTap={tap} />
+          <BingoCard squares={card.squares} config={config} marked={marked} called={called} onTap={tap} icons={icons} />
 
           {showSwap && (
             <div className="rounded-xl p-3 text-center space-y-2" style={{ background: "rgba(0,0,0,.22)" }}>
@@ -307,7 +311,7 @@ export function BingoNightPlayer() {
             className="w-full py-4 rounded-xl font-display font-bold text-3xl tracking-widest disabled:opacity-50 shadow-lg active:scale-[.99]"
             style={{ background: "var(--bn-accent)", color: "var(--bn-accent-ink)" }}
           >
-            {coolLeft > 0 && verdict?.kind !== "yes" ? `BINGO (${coolLeft}s)` : "BINGO!"}
+            {coolLeft > 0 && verdict?.kind !== "yes" ? `BINGO (${coolLeft}s)` : plainBangs("BINGO!")}
           </button>
           {iWon ? (
             <p className="text-center font-bold text-lg" role="status" style={{ color: "var(--bn-accent)" }}>
@@ -335,7 +339,8 @@ export function BingoNightPlayer() {
           <p className="text-xs uppercase tracking-widest opacity-80 mb-1.5">Called so far</p>
           <div className="flex flex-wrap gap-1.5">
             {[...calls].reverse().map((v, i) => (
-              <span key={v} className="px-2 py-0.5 rounded text-sm font-bold" style={i === 0 ? { background: "var(--bn-accent)", color: "var(--bn-accent-ink)" } : { background: "rgba(0,0,0,.25)" }}>
+              <span key={v} className="px-2 py-0.5 rounded text-sm font-bold inline-flex items-center gap-1" style={i === 0 ? { background: "var(--bn-accent)", color: "var(--bn-accent-ink)" } : { background: "rgba(0,0,0,.25)" }}>
+                <WikiIcon src={icons?.[v]} size="1.1rem" />
                 {safeLabel(config, v)}
               </span>
             ))}

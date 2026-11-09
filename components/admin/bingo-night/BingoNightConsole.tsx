@@ -6,10 +6,11 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PATTERN_MENU, type PatternId } from "@/lib/bingo-night/core";
 import { themeVars } from "@/lib/bingo-night/themes";
-import { PATTERN_TIMES, configFor, patternDescription, patternName, safeLabel } from "@/lib/bingo-night/ui";
+import { PATTERN_TIMES, configFor, patternDescription, patternName, plainBangs, safeLabel } from "@/lib/bingo-night/ui";
 import type { ConsoleClaim, ConsoleState } from "@/lib/bingo-night/server";
 import { BingoCard } from "@/components/bingo-night/BingoCard";
 import { PatternPicture } from "@/components/bingo-night/PatternPicture";
+import { WikiIcon } from "@/components/bingo-night/WikiIcon";
 import { InviteQr } from "./InviteQr";
 
 const time = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit" });
@@ -102,6 +103,7 @@ export function BingoNightConsole({ id }: { id: string }) {
   const nextNumber = (s.rounds.at(-1)?.number ?? 0) + 1;
   const pending = s.claims.filter((c) => c.status === "pending");
   const lastLabel = calls.length ? safeLabel(config, calls[calls.length - 1]) : null;
+  const icons = game.card_mode === "words" && game.show_pictures ? game.word_icons : null;
 
   const takeOver = async () => {
     if (s.control === "ask_to_take_over" && !confirm(`Take over from ${game.host_name ?? "the current host"}? They're still active.`)) return;
@@ -125,7 +127,7 @@ export function BingoNightConsole({ id }: { id: string }) {
           <Link href="/admin/bingo-night" className="text-sm text-gnome-green hover:underline">
             ← All games
           </Link>
-          <h1 className="font-display text-3xl text-gnome-green">{game.name}</h1>
+          <h1 className="font-display text-3xl text-gnome-green">{plainBangs(game.name)}</h1>
           <p className="text-sm text-bark-brown-light">
             {live ? "Live" : game.status === "draft" ? "Draft (not launched)" : "Finished"} · {game.card_mode === "numbers" ? "Number cards" : `Word cards (${game.words?.length ?? 0} words)`} · {s.players}{" "}
             {s.players === 1 ? "player" : "players"} · {s.cardsMade} cards made
@@ -226,7 +228,10 @@ export function BingoNightConsole({ id }: { id: string }) {
                     </button>
                     <div>
                       <p className="text-xs uppercase tracking-wide text-iron-grey">Last call ({calls.length})</p>
-                      <p className="font-display text-4xl text-bark-brown leading-none">{lastLabel ?? "–"}</p>
+                      <p className="font-display text-4xl text-bark-brown leading-none flex items-center gap-2">
+                        <WikiIcon src={calls.length ? icons?.[calls[calls.length - 1]] : null} size={36} />
+                        {lastLabel ?? "–"}
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -264,7 +269,7 @@ export function BingoNightConsole({ id }: { id: string }) {
                   <ol className="flex flex-wrap gap-1.5">
                     {calls.map((v, i) => (
                       <li key={v} className={`text-xs px-2 py-1 rounded ${i === calls.length - 1 ? "bg-gnome-green text-white" : "bg-bark-brown-light/15 text-bark-brown"}`}>
-                        <span className="opacity-60">{i + 1}.</span> {safeLabel(config, v)}
+                        <span className="opacity-60">{i + 1}.</span> <WikiIcon src={icons?.[v]} size={14} className="align-[-2px]" /> {safeLabel(config, v)}
                       </li>
                     ))}
                   </ol>

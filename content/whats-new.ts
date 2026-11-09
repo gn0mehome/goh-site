@@ -36,6 +36,24 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── November 9, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-11-09-bingo-night-item-pictures",
+    date: "2026-11-09",
+    kind: "new",
+    audience: "staff",
+    title: "Bingo Night: item pictures on word cards",
+    summary:
+      "Word games can now show OSRS item pictures. Tick Show item pictures from the OSRS Wiki when setting up a word game: the site looks up each word on the wiki and shows its inventory picture on the players' cards, on the stream view's board and big latest call, and in the host console. Every Friendsgiving Feast food has one; places, bosses and other non-items stay as text. You see all the pictures before saving and can click any to remove it. It works for your own word lists too, and can be switched on or off even while a game is live.",
+    tryIt: [
+      "Go to Admin › Events › Bingo Night, press + New game (or Edit), choose Words and a word set.",
+      "Tick Show item pictures from the OSRS Wiki and check the preview. Click a picture you don't want to remove it.",
+      "Save, launch, and open the bingo page on your phone to see the pictures on your card.",
+    ],
+    links: [
+      { label: "Bingo Night (host)", href: "/admin/bingo-night" },
+      { label: "Bingo Night (play)", href: "/bingo-night" },
+    ],
+  },
+  {
     id: "2026-11-09-bingo-night-stream-words-fit",
     date: "2026-11-09",
     kind: "fixed",
