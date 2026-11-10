@@ -1,30 +1,39 @@
-// Colour themes for a Bingo Night game: the player page and the stream view
-// both draw with these CSS variables.
+// Colour themes for a Bingo Night game: the same seven themes as the site
+// (lib/site-theme.ts), plus Auto, which follows the holiday calendar like the
+// site's Auto. The colours themselves come from each theme's palette in
+// app/site-themes.css (the .bn-theme block), so Bingo Night always matches
+// the site. The player page, the stream view and the host's card preview
+// all draw with the --bn-* variables that block sets.
 
-import type { CSSProperties } from "react";
+import { SITE_THEMES, autoTheme, isThemeKey, type SiteThemeKey } from "@/lib/site-theme";
 
-export interface BingoTheme {
-  name: string;
-  vars: Record<string, string>;
+export type BingoThemeChoice = SiteThemeKey | "auto";
+
+/** Theme names from before Bingo Night used the site's themes. */
+const OLD_NAMES: Record<string, SiteThemeKey> = { friendsgiving: "thanksgiving" };
+
+/** The choices for the game editor, in order. */
+export const BINGO_THEME_CHOICES: { key: BingoThemeChoice; label: string }[] = [
+  { key: "auto", label: `Auto (holidays): ${SITE_THEMES[autoTheme()].name} right now` },
+  ...(Object.keys(SITE_THEMES) as SiteThemeKey[]).map((k) => ({ key: k, label: `${SITE_THEMES[k].emoji} ${SITE_THEMES[k].name}` })),
+];
+
+export const isBingoThemeChoice = (v: unknown): v is BingoThemeChoice => v === "auto" || isThemeKey(v) || (typeof v === "string" && v in OLD_NAMES);
+
+/** The site theme a game's setting draws with today. */
+export function bingoTheme(key: string | null | undefined): SiteThemeKey {
+  if (key === "auto") return autoTheme();
+  if (isThemeKey(key)) return key;
+  return OLD_NAMES[key ?? ""] ?? "gnome";
 }
 
-export const BINGO_THEMES: Record<string, BingoTheme> = {
-  gnome: {
-    name: "Gn0me Home (greens and browns)",
-    vars: { "--bn-bg": "#1f3a26", "--bn-bg2": "#2c5234", "--bn-panel": "#f4ead2", "--bn-ink": "#2b1d0e", "--bn-accent": "#d9a63b", "--bn-accent-ink": "#2b1d0e", "--bn-hit": "#3f8f4f", "--bn-hit-ink": "#ffffff", "--bn-head": "#6b4423", "--bn-soft": "#e3d3ad", "--bn-text": "#f7f0dc" },
-  },
-  friendsgiving: {
-    name: "Friendsgiving (rust, amber and cream)",
-    vars: { "--bn-bg": "#5a2a12", "--bn-bg2": "#7a3a18", "--bn-panel": "#fbf1dc", "--bn-ink": "#3a1e0c", "--bn-accent": "#e8a33a", "--bn-accent-ink": "#3a1e0c", "--bn-hit": "#b5531f", "--bn-hit-ink": "#ffffff", "--bn-head": "#8c3d14", "--bn-soft": "#f0dcb6", "--bn-text": "#fff4e0" },
-  },
-  halloween: {
-    name: "Halloween (purple and pumpkin)",
-    vars: { "--bn-bg": "#1d1029", "--bn-bg2": "#2e1846", "--bn-panel": "#f6eadc", "--bn-ink": "#24122f", "--bn-accent": "#ff8a1f", "--bn-accent-ink": "#24122f", "--bn-hit": "#7a3fb0", "--bn-hit-ink": "#ffffff", "--bn-head": "#e0701a", "--bn-soft": "#e9d6c4", "--bn-text": "#fbefe0" },
-  },
-  winter: {
-    name: "Winter (icy blue)",
-    vars: { "--bn-bg": "#12294a", "--bn-bg2": "#1a3a66", "--bn-panel": "#f2f8ff", "--bn-ink": "#0f2340", "--bn-accent": "#bfe3ff", "--bn-accent-ink": "#0f2340", "--bn-hit": "#c62f3a", "--bn-hit-ink": "#ffffff", "--bn-head": "#2f6aa8", "--bn-soft": "#d6e6f5", "--bn-text": "#f2f8ff" },
-  },
-};
+/** "Thanksgiving", or "Auto (Thanksgiving)". */
+export function bingoThemeName(key: string | null | undefined): string {
+  const name = SITE_THEMES[bingoTheme(key)].name;
+  return key === "auto" ? `Auto (${name})` : name;
+}
 
-export const themeVars = (key: string | null | undefined) => (BINGO_THEMES[key ?? ""] ?? BINGO_THEMES.gnome).vars as CSSProperties;
+/** Props for the element a game is drawn in: its site theme, and the Bingo Night colours from it. */
+export function themeProps(key: string | null | undefined, className = ""): { "data-theme": SiteThemeKey; className: string } {
+  return { "data-theme": bingoTheme(key), className: `bn-theme ${className}`.trim() };
+}

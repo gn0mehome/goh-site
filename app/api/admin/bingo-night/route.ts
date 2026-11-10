@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkPermission } from "@/lib/check-permission";
-import { validateWords, WORD_SETS } from "@/lib/bingo-night/core";
-import { BINGO_THEMES } from "@/lib/bingo-night/themes";
+import { validateWords } from "@/lib/bingo-night/core";
+import { isBingoThemeChoice } from "@/lib/bingo-night/themes";
+import { getWordList } from "@/lib/bingo-night/word-lists";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { BingoError, bingoDb, launchGame, type GameRow } from "@/lib/bingo-night/server";
 import { findWordPictures, isWikiImage } from "@/lib/bingo-night/wiki-icons";
 
@@ -19,23 +21,30 @@ export async function GET() {
   return NextResponse.json({ games: data as GameRow[] });
 }
 
+/** The words for a game: a saved word list's (copied now, so later edits to the list don't change the game), or the host's own. */
+async function gameWords(sb: SupabaseClient, body: Record<string, unknown>): Promise<{ wordSet: string | null; words: string[] }> {
+  if (typeof body.word_set === "string" && body.word_set) {
+    const list = await getWordList(sb, body.word_set);
+    if (!list) throw new BingoError("That word list doesn't exist any more. Pick another.");
+    const res = validateWords(list.words);
+    if (!res.ok) throw new BingoError(`The "${list.name}" list needs fixing first: ${res.errors.slice(0, 2).join(" ")}`);
+    return { wordSet: list.id, words: res.words };
+  }
+  const res = validateWords(Array.isArray(body.words) ? (body.words as string[]) : String(body.words ?? ""));
+  if (!res.ok) throw new BingoError(res.errors.slice(0, 4).join(" "));
+  return { wordSet: null, words: res.words };
+}
+
 /** Reads and checks a game's settings from the editor. */
-function readGame(body: Record<string, unknown>) {
+async function readGame(sb: SupabaseClient, body: Record<string, unknown>) {
   const name = String(body.name ?? "").trim().slice(0, 80);
   if (!name) throw new BingoError("Give the game a name.");
-  const theme = typeof body.theme === "string" && body.theme in BINGO_THEMES ? body.theme : "gnome";
+  const theme = isBingoThemeChoice(body.theme) ? body.theme : "gnome";
   const mode = body.card_mode === "words" ? "words" : "numbers";
   let words: string[] | null = null;
   let wordSet: string | null = null;
   if (mode === "words") {
-    if (typeof body.word_set === "string" && body.word_set in WORD_SETS) {
-      wordSet = body.word_set;
-      words = WORD_SETS[wordSet].words;
-    } else {
-      const res = validateWords(Array.isArray(body.words) ? (body.words as string[]) : String(body.words ?? ""));
-      if (!res.ok) throw new BingoError(res.errors.slice(0, 4).join(" "));
-      words = res.words;
-    }
+    ({ wordSet, words } = await gameWords(sb, body));
   }
   const at = typeof body.scheduled_for === "string" && body.scheduled_for ? new Date(body.scheduled_for) : null;
   return {
@@ -75,7 +84,10 @@ export async function POST(request: NextRequest) {
     const id = typeof body.id === "string" ? body.id : null;
     if (body.action === "pictures") {
       // Preview for the editor: an OSRS Wiki picture (or null) for each word.
-      const words = typeof body.word_set === "string" && body.word_set in WORD_SETS ? WORD_SETS[body.word_set].words : validateWords(Array.isArray(body.words) ? body.words : String(body.words ?? "")).words;
+      const words =
+        typeof body.word_set === "string" && body.word_set
+          ? ((await getWordList(sb, body.word_set))?.words ?? [])
+          : validateWords(Array.isArray(body.words) ? body.words : String(body.words ?? "")).words;
       if (!words.length) throw new BingoError("Add some words first.");
       try {
         return NextResponse.json({ words, icons: await findWordPictures(words.slice(0, 100)) });
@@ -84,7 +96,7 @@ export async function POST(request: NextRequest) {
       }
     }
     if (body.action === "save") {
-      const fields = readGame(body);
+      const fields = await readGame(sb, body);
       if (id) {
         const { data: g } = await sb.from("bingo_night_games").select("status, card_mode, words").eq("id", id).maybeSingle();
         if (!g) throw new BingoError("That game doesn't exist.", 404);

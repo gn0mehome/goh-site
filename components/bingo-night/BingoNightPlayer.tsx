@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CLAIM_COOLDOWN_MS } from "@/lib/bingo-night/core";
-import { themeVars } from "@/lib/bingo-night/themes";
+import { themeProps } from "@/lib/bingo-night/themes";
 import { configFor, patternDescription, patternName, plainBangs, safeLabel } from "@/lib/bingo-night/ui";
 import type { PlayerCard } from "@/lib/bingo-night/server";
 import { BingoCard } from "./BingoCard";
@@ -168,9 +168,11 @@ export function BingoNightPlayer() {
   };
 
   const wrap = (children: React.ReactNode) => (
-    <div style={themeVars(game?.theme)} className="-mx-4 sm:mx-0 sm:rounded-2xl">
-      <div className="min-h-[70vh] px-3 sm:px-6 py-5 sm:rounded-2xl" style={{ background: "linear-gradient(180deg, var(--bn-bg2), var(--bn-bg))", color: "var(--bn-text)" }}>
-        {children}
+    <div {...themeProps(game?.theme, "-mx-4 sm:mx-0 sm:rounded-2xl")}>
+      <div className="relative min-h-[70vh] px-3 sm:px-6 py-5 sm:rounded-2xl overflow-hidden" style={{ background: "linear-gradient(180deg, var(--bn-bg2), var(--bn-bg))", color: "var(--bn-text)" }}>
+        {/* The theme's faded icons (leaves, trees, pumpkins...), as on the site's banner. */}
+        <div className="absolute inset-0 theme-banner-pattern" aria-hidden />
+        <div className="relative">{children}</div>
       </div>
     </div>
   );

@@ -181,3 +181,23 @@
   --banner-size: 180px 180px;
   --banner-opacity: 1;
 }
+
+/* ===== Bingo Night =====
+   A game's colours come from its site theme (lib/bingo-night/themes.ts puts
+   data-theme and this class on the game's element), so the player page, the
+   stream view and the host's preview match the site. Dark backdrop from the
+   theme's bark and green, parchment cards, the theme's gold/accent for the
+   latest call and winner banner. */
+.bn-theme {
+  --bn-bg: color-mix(in srgb, var(--c-bark) 78%, var(--c-green));
+  --bn-bg2: color-mix(in srgb, var(--c-green) 70%, var(--c-bark));
+  --bn-panel: var(--c-parchment);
+  --bn-soft: var(--c-parchment-dark);
+  --bn-ink: var(--c-bark);
+  --bn-head: var(--c-gold-display);
+  --bn-accent: var(--c-gold-light);
+  --bn-accent-ink: var(--c-bark);
+  --bn-hit: var(--c-green-light);
+  --bn-hit-ink: #ffffff;
+  --bn-text: var(--c-parchment);
+}

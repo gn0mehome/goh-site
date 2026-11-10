@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PATTERN_MENU, type PatternId } from "@/lib/bingo-night/core";
-import { themeVars } from "@/lib/bingo-night/themes";
+import { themeProps } from "@/lib/bingo-night/themes";
 import { PATTERN_TIMES, configFor, patternDescription, patternName, plainBangs, safeLabel } from "@/lib/bingo-night/ui";
 import type { ConsoleClaim, ConsoleState } from "@/lib/bingo-night/server";
 import { BingoCard } from "@/components/bingo-night/BingoCard";
@@ -311,7 +311,7 @@ export function BingoNightConsole({ id }: { id: string }) {
                       </button>
                       {open && (
                         <div className="mt-2 space-y-2">
-                          <div className="max-w-[280px] mx-auto" style={themeVars(game.theme)}>
+                          <div {...themeProps(game.theme, "max-w-[280px] mx-auto")}>
                             <BingoCard squares={c.squares} config={config} marked={new Set(c.squares.flatMap((v, pos) => (v !== null && called.has(v) ? [pos] : [])))} outline={new Set(c.matched ?? [])} compact />
                           </div>
                           <p className="text-xs text-iron-grey text-center">Called squares are filled; the winning squares are outlined.</p>
