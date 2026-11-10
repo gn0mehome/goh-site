@@ -34,7 +34,50 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── November 10, 2026 ─────────────────────────────────────────────
+  {
+    id: "2026-11-10-bingo-night-site-themes-word-lists",
+    date: "2026-11-10",
+    kind: "improved",
+    audience: "staff",
+    title: "Bingo Night: the site's holiday themes, and word lists you can edit",
+    summary:
+      "Bingo Night now uses the same seven colour themes as the site (Gn0me Home, Halloween, Thanksgiving, Winter Holidays, Valentine's Day, St. Patrick's Day and 4th of July), plus Auto, which changes with the holidays. The player page and the stream view also get the theme's faded background icons, like the homepage banner. Word lists now live under Admin › Settings › Bingo Night Word Lists, where you can make new lists and edit, copy or delete them, including the OSRS Classic and Friendsgiving Feast lists. A game keeps its own copy of the words when it's saved, so changing a list never changes a game that's already set up or live.",
+    tryIt: [
+      "Open Settings › Bingo Night Word Lists and press + New list. Add at least 24 words, one per line, and save.",
+      "Open Bingo Night, press + New game, pick Words and choose your list. Pick a colour theme; the little swatch beside it shows its colours.",
+    ],
+    links: [
+      { label: "Bingo Night Word Lists", href: "/admin/bingo-night/word-lists" },
+      { label: "Bingo Night", href: "/admin/bingo-night" },
+    ],
+  },
   // ── November 9, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-11-09-multi-metric-competitions",
+    date: "2026-11-09",
+    kind: "new",
+    audience: "staff",
+    title: "Competitions can track more than one skill or boss",
+    summary:
+      "Like on Wise Old Man, a competition can now cover several skills or bosses at once, for example a Boss of the Week for Vorkath and Zulrah. Everyone is ranked by their combined total across all of them. In the WOM Competitions maker, pick the first skill or boss as usual, then use \"+ Add another\" for more. Skill and Boss of the Week titles list them all (\"Boss of the Week | 11/15 | Vorkath & Zulrah\"). You can also add or remove them later under Manage on an existing competition.",
+    tryIt: [
+      "Open Competitions › WOM Competitions and choose Boss of the Week.",
+      "Under Boss, click \"+ Add another boss\" and pick a second boss. The title updates to include both.",
+    ],
+    links: [{ label: "WOM Competitions", href: "/admin/wom-competitions" }],
+  },
+  {
+    id: "2026-11-09-no-auto-host",
+    date: "2026-11-09",
+    kind: "fixed",
+    audience: "everyone",
+    title: "Events no longer list whoever made them in Discord as the host",
+    summary:
+      "Events brought over from Discord used to show the person who created the Discord event as the host, so nearly every event said \"Host: Chesapeake14\" even when someone else was running it. That's been cleared from past and upcoming events, and new events from Discord come in with no host. Hosts that staff typed in by hand are unchanged. To show a host on an event, add one when you edit it in the admin panel.",
+    tryIt: ["Look at the upcoming events on the homepage: they no longer say \"Host: Chesapeake14\"."],
+    links: [{ label: "Home", href: "/" }, { label: "Events", href: "/events" }],
+  },
   {
     id: "2026-11-09-calendar-weekly-column",
     date: "2026-11-09",

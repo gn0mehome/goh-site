@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { MAX_WORDS, MAX_WORD_LENGTH, MIN_WORDS, validateWords, WORD_SETS } from "@/lib/bingo-night/core";
-import { BINGO_THEMES } from "@/lib/bingo-night/themes";
+import { MAX_WORDS, MAX_WORD_LENGTH, MIN_WORDS, validateWords } from "@/lib/bingo-night/core";
+import { BINGO_THEME_CHOICES, bingoThemeName, themeProps } from "@/lib/bingo-night/themes";
 import type { GameRow } from "@/lib/bingo-night/server";
 import { InviteQr } from "./InviteQr";
 import { WikiIcon } from "@/components/bingo-night/WikiIcon";
@@ -17,7 +17,7 @@ interface Draft {
   name: string;
   theme: string;
   card_mode: "numbers" | "words";
-  word_set: string; // a WORD_SETS key, or "custom"
+  word_set: string; // a saved word list's id, or "custom"
   words: string;
   winner_message: string;
   scheduled_for: string; // datetime-local
@@ -31,6 +31,13 @@ interface Draft {
 }
 
 const EMPTY: Draft = { id: null, name: "", theme: "gnome", card_mode: "numbers", word_set: "osrs_classic", words: "", winner_message: "Meet the host at the Clan Hall to collect your prize.", scheduled_for: "", status: "draft", show_pictures: false, pictures: null };
+
+/** A saved word list (Admin › Settings › Bingo Night Word Lists). */
+export interface WordListSummary {
+  id: string;
+  name: string;
+  words: string[];
+}
 
 const toLocal = (iso: string | null) => {
   if (!iso) return "";
@@ -51,6 +58,7 @@ export function BingoNightGames() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [lists, setLists] = useState<WordListSummary[]>([]);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/bingo-night");
@@ -60,7 +68,13 @@ export function BingoNightGames() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
+    fetch("/api/admin/bingo-night/word-lists")
+      .then((r) => r.json())
+      .then((d: { lists?: WordListSummary[] }) => setLists(d.lists ?? []))
+      .catch(() => {});
   }, [load]);
+  const listName = (id: string | null) => (id ? lists.find((l) => l.id === id)?.name ?? "a deleted list" : "own list");
+  const newDraft = (): Draft => ({ ...EMPTY, word_set: lists.some((l) => l.id === EMPTY.word_set) ? EMPTY.word_set : lists[0]?.id ?? "custom" });
 
   const act = async (key: string, body: Record<string, unknown>, done?: string) => {
     setBusy(key);
@@ -83,8 +97,9 @@ export function BingoNightGames() {
       name: g.name,
       theme: g.theme,
       card_mode: g.card_mode,
-      word_set: g.word_set ?? "custom",
-      words: g.word_set ? "" : (g.words ?? []).join("\n"),
+      // A list that's since been deleted: carry on with the game's own copy of its words.
+      word_set: g.word_set && lists.some((l) => l.id === g.word_set) ? g.word_set : "custom",
+      words: g.word_set && lists.some((l) => l.id === g.word_set) ? "" : (g.words ?? []).join("\n"),
       winner_message: g.winner_message,
       scheduled_for: toLocal(g.scheduled_for),
       status: g.status,
@@ -107,7 +122,7 @@ export function BingoNightGames() {
       scheduled_for: draft.scheduled_for ? new Date(draft.scheduled_for).toISOString() : "",
       show_pictures: draft.card_mode === "words" && draft.show_pictures,
       // Only send the preview if it's for these exact words; otherwise the server looks them up.
-      word_icons: draft.pictures && sameWords(draft.pictures.words, currentWords(draft)) ? draft.pictures.icons : undefined,
+      word_icons: draft.pictures && sameWords(draft.pictures.words, currentWords(draft, lists)) ? draft.pictures.icons : undefined,
     };
     if (await act("save", body, "Saved.")) setDraft(null);
   };
@@ -150,13 +165,17 @@ export function BingoNightGames() {
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm text-bark-brown">
               Colour theme
-              <select className={`${inputClass} mt-1 cursor-pointer`} value={draft.theme} onChange={(e) => setDraft({ ...draft, theme: e.target.value })}>
-                {Object.entries(BINGO_THEMES).map(([k, t]) => (
-                  <option key={k} value={k}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+              <div className="mt-1 flex items-center gap-2">
+                <select className={`${inputClass} cursor-pointer`} value={draft.theme} onChange={(e) => setDraft({ ...draft, theme: e.target.value })}>
+                  {BINGO_THEME_CHOICES.map((t) => (
+                    <option key={t.key} value={t.key}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+                <ThemeSwatch theme={draft.theme} />
+              </div>
+              <span className="text-xs text-iron-grey">The same themes as the site. Auto changes with the holidays.</span>
             </label>
             <label className="block text-sm text-bark-brown">
               Date and time (optional)
@@ -179,20 +198,25 @@ export function BingoNightGames() {
             </div>
             {draft.card_mode === "words" && (
               <div className="space-y-2">
-                <select className={`${inputClass} cursor-pointer`} value={draft.word_set} onChange={(e) => setDraft({ ...draft, word_set: e.target.value })}>
-                  {Object.entries(WORD_SETS).map(([k, s]) => (
-                    <option key={k} value={k}>
-                      {s.name} ({s.words.length} words)
-                    </option>
-                  ))}
-                  <option value="custom">My own list</option>
-                </select>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <select className={`${inputClass} cursor-pointer flex-1 min-w-[12rem]`} value={draft.word_set} onChange={(e) => setDraft({ ...draft, word_set: e.target.value })}>
+                    {lists.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.name} ({l.words.length} words)
+                      </option>
+                    ))}
+                    <option value="custom">My own list (just for this game)</option>
+                  </select>
+                  <Link href="/admin/bingo-night/word-lists" className="text-xs text-gnome-green hover:underline">
+                    Edit word lists →
+                  </Link>
+                </div>
                 {draft.word_set === "custom" ? (
                   <>
                     <div className="flex flex-wrap gap-3 text-xs">
-                      {Object.entries(WORD_SETS).map(([k, s]) => (
-                        <button key={k} type="button" className="text-gnome-green hover:underline" onClick={() => setDraft({ ...draft, words: s.words.join("\n") })}>
-                          Start from {s.name}
+                      {lists.map((l) => (
+                        <button key={l.id} type="button" className="text-gnome-green hover:underline" onClick={() => setDraft({ ...draft, words: l.words.join("\n") })}>
+                          Start from {l.name}
                         </button>
                       ))}
                     </div>
@@ -209,13 +233,13 @@ export function BingoNightGames() {
                     )}
                   </>
                 ) : (
-                  <p className="text-xs text-iron-grey">{WORD_SETS[draft.word_set]?.words.join(" · ")}</p>
+                  <p className="text-xs text-iron-grey">{lists.find((l) => l.id === draft.word_set)?.words.join(" · ")}</p>
                 )}
               </div>
             )}
           </fieldset>
 
-          {draft.card_mode === "words" && <PicturesPanel draft={draft} setDraft={setDraft} />}
+          {draft.card_mode === "words" && <PicturesPanel draft={draft} setDraft={setDraft} lists={lists} />}
 
           <label className="block text-sm text-bark-brown">
             Winner message
@@ -233,7 +257,7 @@ export function BingoNightGames() {
           </div>
         </Card>
       ) : (
-        <Button onClick={() => setDraft({ ...EMPTY })}>+ New game</Button>
+        <Button onClick={() => setDraft(newDraft())}>+ New game</Button>
       )}
 
       <Card hover={false}>
@@ -252,7 +276,7 @@ export function BingoNightGames() {
                     <span className={`ml-1 text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS[g.status].tone}`}>{STATUS[g.status].label}</span>
                   </p>
                   <p className="text-xs text-iron-grey">
-                    {g.card_mode === "numbers" ? "Numbers" : `Words: ${g.word_set ? WORD_SETS[g.word_set]?.name : "own list"} (${g.words?.length ?? 0})`} · {BINGO_THEMES[g.theme]?.name.split(" (")[0] ?? g.theme}
+                    {g.card_mode === "numbers" ? "Numbers" : `Words: ${listName(g.word_set)} (${g.words?.length ?? 0})`} · {bingoThemeName(g.theme)}
                     {g.status === "draft" && g.scheduled_for && ` · ${when(g.scheduled_for)}`}
                     {g.status === "finished" && g.ended_at && ` · played ${when(g.launched_at)}`}
                   </p>
@@ -309,9 +333,9 @@ export function BingoNightGames() {
 }
 
 /** The words a draft's cards will use. */
-function currentWords(d: Draft): string[] {
+function currentWords(d: Draft, lists: WordListSummary[]): string[] {
   if (d.liveWords) return d.liveWords;
-  if (d.word_set !== "custom") return WORD_SETS[d.word_set]?.words ?? [];
+  if (d.word_set !== "custom") return lists.find((l) => l.id === d.word_set)?.words ?? [];
   return validateWords(d.words).words;
 }
 const sameWords = (a: string[], b: string[]) => a.length === b.length && a.every((w, i) => w === b[i]);
@@ -320,15 +344,15 @@ const sameWords = (a: string[], b: string[]) => a.length === b.length && a.every
  * "Show item pictures": finds each word's picture on the OSRS Wiki and shows
  * them, so staff can see what players will get and click to remove any.
  */
-function PicturesPanel({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft) => void }) {
+function PicturesPanel({ draft, setDraft, lists }: { draft: Draft; setDraft: (d: Draft) => void; lists: WordListSummary[] }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const words = currentWords(draft);
+  const words = currentWords(draft, lists);
   const fresh = !!draft.pictures && sameWords(draft.pictures.words, words);
   const found = fresh ? draft.pictures!.icons.filter(Boolean).length : 0;
 
   const find = async (d: Draft) => {
-    const ws = currentWords(d);
+    const ws = currentWords(d, lists);
     if (ws.length < MIN_WORDS) return;
     setBusy(true);
     setError(null);
@@ -406,5 +430,16 @@ function PicturesPanel({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft)
         </>
       )}
     </div>
+  );
+}
+
+/** A tiny look at a theme: the backdrop, a card square, a called square and the accent. */
+function ThemeSwatch({ theme }: { theme: string }) {
+  return (
+    <span {...themeProps(theme, "shrink-0 inline-flex items-center gap-1 rounded-md px-1.5 py-1")} style={{ background: "linear-gradient(160deg, var(--bn-bg2), var(--bn-bg))" }} aria-hidden>
+      <span className="w-4 h-4 rounded-sm" style={{ background: "var(--bn-panel)" }} />
+      <span className="w-4 h-4 rounded-sm" style={{ background: "var(--bn-hit)" }} />
+      <span className="w-4 h-4 rounded-sm" style={{ background: "var(--bn-accent)" }} />
+    </span>
   );
 }

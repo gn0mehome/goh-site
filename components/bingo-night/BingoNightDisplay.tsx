@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { COLUMNS, PER_COLUMN } from "@/lib/bingo-night/core";
-import { themeVars } from "@/lib/bingo-night/themes";
+import { themeProps } from "@/lib/bingo-night/themes";
 import { configFor, patternDescription, patternName, plainBangs, safeLabel } from "@/lib/bingo-night/ui";
 import { PatternPicture } from "./PatternPicture";
 import { QrCode } from "./QrCode";
@@ -54,7 +54,7 @@ export function BingoNightDisplay() {
   const winners = round?.winners ?? [];
 
   const stage = (children: React.ReactNode) => (
-    <div className="fixed inset-0 z-[200] overflow-hidden" style={{ ...themeVars(game?.theme), background: "var(--bn-bg)" }}>
+    <div {...themeProps(game?.theme, "fixed inset-0 z-[200] overflow-hidden")} style={{ background: "var(--bn-bg)" }}>
       <style>{`
         @keyframes bn-reveal { 0% { transform: scale(.4) rotate(-8deg); opacity: 0 } 60% { transform: scale(1.12) rotate(2deg); opacity: 1 } 100% { transform: scale(1) rotate(0) } }
         @keyframes bn-pop { 0% { transform: translateY(40px); opacity: 0 } 100% { transform: none; opacity: 1 } }
@@ -65,7 +65,9 @@ export function BingoNightDisplay() {
         className="absolute left-1/2 top-1/2"
         style={{ width: W, height: H, transform: `translate(-50%, -50%) scale(${scale})`, background: "linear-gradient(160deg, var(--bn-bg2), var(--bn-bg))", color: "var(--bn-text)" }}
       >
-        {children}
+        {/* The theme's faded icons (leaves, trees, pumpkins...), as on the site's banner. */}
+        <div className="absolute inset-0 theme-banner-pattern" aria-hidden />
+        <div className="relative h-full">{children}</div>
       </div>
     </div>
   );

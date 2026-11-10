@@ -155,7 +155,6 @@ export async function runEventsImport(): Promise<ImportResult> {
         scheduled_start_time: string;
         scheduled_end_time: string | null;
         entity_metadata?: { location?: string };
-        creator?: { username: string; global_name?: string };
       }) => ({
         title: de.name,
         description: de.description ?? null,
@@ -163,7 +162,7 @@ export async function runEventsImport(): Promise<ImportResult> {
         start_time: de.scheduled_start_time,
         end_time: de.scheduled_end_time ?? null,
         location: de.entity_metadata?.location ?? null,
-        host_rsn: de.creator?.global_name ?? de.creator?.username ?? null,
+        // No host: whoever made the Discord event usually isn't the one running it. Staff add a host by hand when there is one.
         discord_event_id: de.id,
       })
     );
